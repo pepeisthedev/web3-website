@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import './App.css'
 import { MintButton } from './components/MintButton'
-/*
+import { chainId, chainName, rpcHost } from './config.js';
 import {createWeb3Modal, defaultConfig} from "@web3modal/ethers/react";
 
 const projectId = "YOUR_PROJECT_ID";
@@ -32,7 +32,7 @@ createWeb3Modal({
     projectId,
     enableAnalytics: true,
 });
-*/
+
 function App() {
 
 
