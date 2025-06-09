@@ -1,15 +1,44 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/favicon.ico'
+
 import './App.css'
+import { MintButton } from './components/MintButton'
+/*
+import {createWeb3Modal, defaultConfig} from "@web3modal/ethers/react";
 
+const projectId = "YOUR_PROJECT_ID";
 
+const mainnet = {
+    chainId: chainId,
+    name: chainName,
+    currency: "ETH",
+    explorerUrl: "https://basescan.org",
+    rpcUrl: rpcHost,
+};
+
+const metadata = {
+    name: "Beadpunks",
+    description: "Punks",
+    url: "https://beadpunks.com",
+    icons: ["https://avatars.mywebsite.com/"],
+};
+
+const ethersConfig = defaultConfig({
+    metadata,
+});
+
+createWeb3Modal({
+    ethersConfig,
+    chains: [mainnet],
+    projectId,
+    enableAnalytics: true,
+});
+*/
 function App() {
-  const [count, setCount] = useState(0)
+
 
   return (
     <>
-<p>HEI</p>
+      <MintButton />
     </>
   )
 }
