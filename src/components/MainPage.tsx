@@ -20,8 +20,10 @@ export default function MainPage(): React.JSX.Element {
         return (
             <>
                 <NavBar setCurrentView={setCurrentView} />
-                <LandingPage setCurrentView={setCurrentView}>
-                </LandingPage>
+                        <div className="pt-16 lg:pt-0">
+                    <LandingPage setCurrentView={setCurrentView}>
+                    </LandingPage>
+                </div>
             </>
         );
     }
@@ -30,10 +32,12 @@ export default function MainPage(): React.JSX.Element {
         return (
             <>
                 <NavBar setCurrentView={setCurrentView} />
-                <Dex
-                    setCurrentView={setCurrentView}
-                    ownedCards={ownedCards}
-                />
+                             <div className="pt-16 lg:pt-0">
+                    <Dex
+                        setCurrentView={setCurrentView}
+                        ownedCards={ownedCards}
+                    />
+                </div>
             </>
         )
     }
