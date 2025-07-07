@@ -2,10 +2,8 @@ import { useState } from 'react'
 
 import './App.css'
 import './appkitConfig'; 
-import LandingPage from './components/LandingPage'
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './appkitConfig';  
-import { modal } from './appkitConfig'; 
+import MainPage from './components/MainPage'
+
 
 
 function App() {
@@ -13,7 +11,7 @@ function App() {
 
   return (
     <>
-      <LandingPage />
+      <MainPage />
     </>
   )
 }
