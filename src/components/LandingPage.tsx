@@ -5,7 +5,7 @@ import { Button } from "./ui/button"
 import { ArrowRight, Play, Star, Users, Zap } from "lucide-react"
 
 interface LandingPageProps {
-    setCurrentView: (view: "landing" | "dex") => void
+    setCurrentView: (view: "landing" | "dex" | "mint") => void
 }
 
 export default function LandingPage({ setCurrentView }: LandingPageProps) {
@@ -105,9 +105,9 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
     }, [])
 
     const images = [
-        "/images/img1.jpg?height=300&width=400",
-        "/images/img2.jpg?height=300&width=400",
-        "/images/img3.jpg?height=300&width=400",
+        "/images/img1.png?height=300&width=400",
+        "/images/img2.png?height=300&width=400",
+        "/images/img3.png?height=300&width=400",
 
     ]
 
@@ -156,8 +156,8 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                        <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg" onClick={() => setCurrentView("dex")}>
-                            Get Started <ArrowRight className="ml-2 h-5 w-5" />
+                        <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg" onClick={() => setCurrentView("mint")}>
+                            Mint <ArrowRight className="ml-2 h-5 w-5" />
                         </Button>
                         <Button
                             size="lg"
