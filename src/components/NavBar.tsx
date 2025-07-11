@@ -6,7 +6,7 @@ import { Button } from "./ui/button"
 import { Wallet, X } from "lucide-react"
 
 interface NavBarProps {
-  setCurrentView: (view: "landing" | "dex") => void
+  setCurrentView: (view: "landing" | "dex" | "mint") => void
 }
 
 export default function NavBar({ setCurrentView }: NavBarProps) {
@@ -65,6 +65,13 @@ export default function NavBar({ setCurrentView }: NavBarProps) {
               className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-white/10 cursor-pointer"
             >
               Home
+            </button>
+
+                        <button
+              onClick={() => setCurrentView("mint")}
+              className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-white/10 cursor-pointer"
+            >
+              Mint
             </button>
             <button
               onClick={() => setCurrentView("dex")}
@@ -163,6 +170,12 @@ export default function NavBar({ setCurrentView }: NavBarProps) {
             className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left transition-all duration-200 hover:bg-white/10 transform hover:translate-x-1"
           >
             Home
+          </button>
+                    <button
+            onClick={() => handleNavClick("mint")}
+            className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left transition-all duration-200 hover:bg-white/10 transform hover:translate-x-1"
+          >
+            Mint
           </button>
           <button
             onClick={() => handleNavClick("dex")}
