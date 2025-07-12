@@ -61,7 +61,7 @@ const fetchCardData = async (cardIds: number[]): Promise<CardData[]> => {
 
   const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
   const svgContract = new ethers.Contract(svgContractAddress, cardArtSvgContractABI, ethersProvider)
-  console.log("📋 SVG Contract initialized:", svgContractAddress)
+ //console.log("📋 SVG Contract initialized:", svgContractAddress)
 
   const cardDataPromises = cardIds.map(async (cardId) => {
     try {
@@ -71,7 +71,7 @@ const fetchCardData = async (cardIds: number[]): Promise<CardData[]> => {
         svgContract.meta(cardId)
       ])
       
-      console.log(`✅ Card ${cardId} data fetched:`, { svg: svg.length, meta })
+      console.log(`✅ Card ${cardId} data fetched:`, { svg: svg, meta })
       return {
         svg,
         description: meta
@@ -99,13 +99,13 @@ const executeOpenPack = async () => {
       throw new Error("No wallet provider available")
     }
 
-    console.log("📡 Setting up provider and signer...")
+   // console.log("📡 Setting up provider and signer...")
     const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
     const signer = await ethersProvider.getSigner()
     const packContract = new ethers.Contract(packsContractAddress, packContractAbi, signer)
     const cardContract = new ethers.Contract(cardContractAddress, cardContractAbi, signer)
 
-    console.log("📝 Submitting open pack transaction...")
+   // console.log("📝 Submitting open pack transaction...")
     const tx = await packContract.openPack({
       gasLimit: 500000,
     })
@@ -181,19 +181,19 @@ const executeOpenPack = async () => {
           </div>
 
           {/* Open Pack Button */}
-          <Button
-            onClick={handleOpenPack}
-            disabled={!isConnected || packCount === 0}
-            className={`
-              w-full py-4 text-lg font-semibold
-              ${packCount > 0 && isConnected
-                ? "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white"
-                : "bg-gray-600 text-gray-400 cursor-not-allowed"
-              }
-            `}
-          >
-            {!isConnected ? "Connect Wallet" : packCount === 0 ? "No Packs Available" : "Open Pack"}
-          </Button>
+        <Button
+          onClick={handleOpenPack}
+          disabled={!isConnected || packCount === 0}
+          className={`
+            w-64 mx-auto py-3 text-base font-semibold
+            ${packCount > 0 && isConnected
+              ? "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white"
+              : "bg-gray-600 text-gray-400 cursor-not-allowed"
+            }
+          `}
+        >
+          {!isConnected ? "Connect Wallet" : packCount === 0 ? "No Packs Available" : "Open Pack"}
+        </Button>
 
           {/* Info */}
           <div className="mt-6 text-sm text-gray-400 space-y-1">

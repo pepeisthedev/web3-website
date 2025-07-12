@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "./ui/button"
 import { X, Loader2 } from "lucide-react"
+import Card from "./Card"
 
 interface CardData {
   svg: string
@@ -68,7 +69,7 @@ export default function TransactionModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
 
-      <div className="relative bg-gradient-to-br from-slate-900 to-purple-900 rounded-2xl p-8 max-w-4xl w-full mx-4 border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-gradient-to-br from-slate-900 to-purple-900 rounded-2xl p-8 max-w-6xl w-full mx-4 border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
         {modalState !== "waiting" && (
           <button
             onClick={handleClose}
@@ -87,7 +88,7 @@ export default function TransactionModal({
             <img
               src={initImage || "/placeholder.svg"}
               alt="Transaction preview"
-                            className="w-32 max-h-32 mx-auto mb-4 rounded-lg object-contain"
+              className="w-32 max-h-32 mx-auto mb-4 rounded-lg object-contain"
             />
             <p className="text-gray-300 mb-6 leading-relaxed">{initText}</p>
             <div className="flex gap-3 justify-center max-w-sm mx-auto">
@@ -127,15 +128,14 @@ export default function TransactionModal({
             {/* Show extracted cards if available */}
             {extractedCards.length > 0 ? (
               <div className="mb-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 justify-items-center">
                   {extractedCards.map((card, index) => (
-                    <div key={index} className="bg-white/10 rounded-lg p-3 border border-white/20">
-                      <div
-                        className="w-full h-32 mb-2 rounded border border-white/30 bg-white/5 flex items-center justify-center overflow-hidden"
-                        dangerouslySetInnerHTML={{ __html: card.svg }}
-                      />
-                      <p className="text-xs text-gray-300 text-center">{card.description}</p>
-                    </div>
+                    <Card
+                      key={index}
+                      cardImage={card.svg}
+                      cardTitle={`Card #${index + 1}`}
+                      cardDescription={card.description}
+                    />
                   ))}
                 </div>
               </div>
@@ -143,14 +143,11 @@ export default function TransactionModal({
               <img
                 src={completedImage || "/placeholder.svg"}
                 alt="Transaction completed"
-                            className="w-32 max-h-32 mx-auto mb-4 rounded-lg object-contain"
+                className="w-32 max-h-32 mx-auto mb-4 rounded-lg object-contain"
               />
             )}
 
-            <Button
-              onClick={handleClose}
-              className="px-8 border-gray-600 bg-gray-600 hover:bg-gray-800 text-white"
-            >
+            <Button onClick={handleClose} className="px-8 border-gray-600 bg-gray-600 hover:bg-gray-800 text-white">
               Close
             </Button>
           </div>
