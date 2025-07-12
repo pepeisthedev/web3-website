@@ -1,0 +1,1 @@
+export type SectionType = "landing" | "dex" | "mint" | "openPack";

@@ -61,24 +61,50 @@ export default function MintPage() {
         setShowModal(true)
     }
 
+    
     const executeMint = async () => {
-        if (!walletProvider) {
-            throw new Error("No wallet provider available")
+        try {
+            if (!walletProvider) {
+                throw new Error("No wallet provider available")
+            }
+    
+            const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
+            const signer = await ethersProvider.getSigner()
+            const contract = new ethers.Contract(packContractAddress, packContractAbi, signer)
+    
+            const totalCost = ethers.parseEther(calculateTotalCost())
+    
+            const tx = await contract.mintPack(quantity, {
+                value: totalCost,
+                gasLimit: 300000,
+            })
+    
+           const receipt =  await tx.wait()
+
+        console.log("🎉 Transaction confirmed!")
+        console.log("Block number:", receipt.blockNumber)
+        console.log("Gas used:", receipt.gasUsed.toString())
+        console.log("Transaction receipt:", receipt)
+        
+        } catch (error: any) {
+            // Handle different types of errors
+            let errorMessage = "Transaction failed. Please try again."
+      
+            if (error.code === "ACTION_REJECTED") {
+                errorMessage = "Transaction was rejected by user."
+            } else if (error.message?.includes("insufficient funds")) {
+                errorMessage = "Insufficient funds to complete transaction."
+            } else if (error.message?.includes("gas")) {
+                errorMessage = "Transaction failed due to gas issues."
+            } else if (error.reason) {
+                errorMessage = error.reason
+            }
+            
+            console.error("Mint error:", error)
+            throw new Error(errorMessage)
         }
-
-        const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
-        const signer = await ethersProvider.getSigner()
-        const contract = new ethers.Contract(packContractAddress, packContractAbi, signer)
-
-        const totalCost = ethers.parseEther(calculateTotalCost())
-
-        const tx = await contract.mintPack(quantity, {
-            value: totalCost,
-            gasLimit: 300000,
-        })
-
-        await tx.wait()
     }
+    
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-20 px-4">

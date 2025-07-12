@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react"
 import { Button } from "./ui/button"
 import { ArrowRight, Play, Star, Users, Zap } from "lucide-react"
+import { SectionType } from "./types/SectionTypes"
 
 interface LandingPageProps {
-    setCurrentView: (view: "landing" | "dex" | "mint") => void
+    setCurrentView: (view: SectionType) => void
 }
 
 export default function LandingPage({ setCurrentView }: LandingPageProps) {
@@ -170,7 +171,7 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
                 </div>
             </section>
 
-    {/* Infinite Rolling Images */}
+            {/* Infinite Rolling Images */}
             <section
                 id="gallery"
                 className={`relative z-20  transition-all duration-1000 delay-300 ${isVisible.gallery ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
@@ -202,7 +203,7 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
                     </div>
                 </div>
             </section>
-        
+
 
             {/* Features Section */}
             <section
@@ -294,7 +295,7 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
                 </div>
             </section>
 
-            <style jsx>{`
+            <style>{`
         @keyframes scroll-left {
           0% {
             transform: translateX(0);
