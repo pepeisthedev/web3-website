@@ -5,7 +5,7 @@ import { useAppKit, useAppKitAccount, useAppKitProvider } from "@reown/appkit/re
 import { ethers } from "ethers"
 import { Button } from "./ui/button"
 import { Sparkles, Star, Zap } from "lucide-react"
-import TransactionModal from "./TransactionModal"
+import OpenPackTransactionModal from "./OpenPackTransactionModal"
 import packContractAbi from "../assets/abi/Bead157Pack.json"
 import cardContractAbi from "../assets/abi/Bead157Card.json"
 import cardArtSvgContractABI from "../assets/abi/Bead157CardArt.json"
@@ -294,14 +294,13 @@ export default function OpenPackPage() {
         </div>
 
         {/* Transaction Modal */}
-        <TransactionModal
+        <OpenPackTransactionModal
           isOpen={showModal}
           onClose={() => setShowModal(false)}
           title="Open Bead157 Pack"
-          initText="Confirm transaction to open 1 pack"
+          initText="Confirm transaction to open a pack"
           completedText="Pack opened successfully! Here are your cards:"
           initImage="/images/pack.png"
-          completedImage=""
           onConfirm={executeOpenPack}
           extractedCards={extractedCards}
         />
