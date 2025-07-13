@@ -105,7 +105,7 @@ export default function Card({ cardData, showBackDefault = false }: CardProps) {
                                 <span className="text-xl sm:text-3xl font-bold text-white">B</span>
                             </div>
                             
-                            <h2 className="text-sm sm:text-lg font-bold text-white text-center mb-2">Bead157</h2>
+                            <h2 className="text-sm sm:text-lg font-bold text-white text-center mb-2">Bead151</h2>
                             <p className="text-xs sm:text-sm text-gray-300 text-center">Trading Card</p>
                             
                             <div className="mt-4 text-xs text-gray-400 text-center">

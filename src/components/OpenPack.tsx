@@ -6,13 +6,13 @@ import { ethers } from "ethers"
 import { Button } from "./ui/button"
 import { Sparkles, Star, Zap } from "lucide-react"
 import OpenPackTransactionModal from "./OpenPackTransactionModal"
-import packContractAbi from "../assets/abi/Bead157Pack.json"
-import cardContractAbi from "../assets/abi/Bead157Card.json"
-import cardArtSvgRouterContractABI from "../assets/abi/Bead157ArtRouter.json"
+import packContractAbi from "../assets/abi/Bead151Pack.json"
+import cardContractAbi from "../assets/abi/Bead151Card.json"
+import cardArtSvgRouterContractABI from "../assets/abi/Bead151ArtRouter.json"
 
-const packsContractAddress = import.meta.env.VITE_BEAD157_CARD_PACK_CONTRACT
-const svgContractAddress = import.meta.env.VITE_BEAD157_CARD_ART_CONTRACT
-const cardContractAddress = import.meta.env.VITE_BEAD157_CARD_CONTRACT
+const packsContractAddress = import.meta.env.VITE_BEAD151_CARD_PACK_CONTRACT
+const svgContractAddress = import.meta.env.VITE_BEAD151_CARD_ART_CONTRACT
+const cardContractAddress = import.meta.env.VITE_BEAD151_CARD_CONTRACT
 
 interface CardData {
     svg: string
@@ -63,7 +63,7 @@ export default function OpenPackPage() {
 
         const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
         const svgContract = new ethers.Contract(svgContractAddress, cardArtSvgRouterContractABI, ethersProvider)
-
+console.log("AAAFetching card data for IDs:", cardIds)
         try {
             // Fetch all SVGs and metadata in a single call
             const [svgs, metadataArray] = await svgContract.renderAndMetaBatch(cardIds)
@@ -176,7 +176,7 @@ export default function OpenPackPage() {
                 {/* Header */}
                 <div className="text-center mb-12">
                     <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 animate-pulse">✨ Pack Opening Chamber ✨</h1>
-                    <p className="text-xl text-gray-300">Discover legendary cards hidden within Bead157 packs</p>
+                    <p className="text-xl text-gray-300">Discover legendary cards hidden within Bead151 packs</p>
                 </div>
 
                 {/* Main Content */}
@@ -204,7 +204,7 @@ export default function OpenPackPage() {
                                         <div className="w-48 h-64 mx-auto bg-gradient-to-br from-yellow-200 to-orange-300 rounded-xl border-2 border-yellow-500 flex items-center justify-center shadow-inner overflow-hidden">
                                             <img
                                                 src="/images/pack.png"
-                                                alt="Bead157 Pack"
+                                                alt="Bead151 Pack"
                                                 className="w-full h-full object-cover"
                                             />
                                         </div>
@@ -275,7 +275,7 @@ export default function OpenPackPage() {
                                         "📦 No Packs Available"
                                     ) : (
                                         <span className="flex items-center justify-center">
-                                            <Sparkles className="w-4 h-4 mr-2 animate-spin" />OPEN Bead157 PACK
+                                            <Sparkles className="w-4 h-4 mr-2 animate-spin" />OPEN Bead151 PACK
                                             <Sparkles className="w-4 h-4 ml-2 animate-spin" />
                                         </span>
                                     )}
@@ -306,7 +306,7 @@ export default function OpenPackPage() {
                 <OpenPackTransactionModal
                     isOpen={showModal}
                     onClose={() => setShowModal(false)}
-                    title="Open Bead157 Pack"
+                    title="Open Bead151 Pack"
                     initText="Confirm transaction to open a pack"
                     completedText="Pack opened successfully! Here are your cards:"
                     initImage="/images/pack.png"

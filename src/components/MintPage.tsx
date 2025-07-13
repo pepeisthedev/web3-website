@@ -6,9 +6,9 @@ import { ethers } from "ethers"
 import { Button } from "./ui/button"
 import { Minus, Plus } from "lucide-react"
 import TransactionModal from "./TransactionModal"
-import packContractAbi from "../assets/abi/Bead157Pack.json"
+import packContractAbi from "../assets/abi/Bead151Pack.json"
 
-const packContractAddress = import.meta.env.VITE_BEAD157_CARD_PACK_CONTRACT
+const packContractAddress = import.meta.env.VITE_BEAD151_CARD_PACK_CONTRACT
 
 export default function MintPage() {
     const { open } = useAppKit()
@@ -28,7 +28,6 @@ export default function MintPage() {
     const fetchPackPrice = async () => {
         try {
             if (!walletProvider) return
-
             const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
             const contract = new ethers.Contract(packContractAddress, packContractAbi, ethersProvider)
 
@@ -111,7 +110,7 @@ export default function MintPage() {
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Mint Bead157 Pack</h1>
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Mint Bead151 Pack</h1>
                     <p className="text-xl text-gray-300">Mint one or more packs to discover rare collectibles</p>
                 </div>
 
@@ -122,7 +121,7 @@ export default function MintPage() {
                         <div className="text-center">
                             <img
                                 src="/images/pack.png?height=300&width=300"
-                                alt="Bead157 Pack"
+                                alt="Bead151 Pack"
                                 className="w-full max-w-sm mx-auto rounded-lg shadow-2xl"
                             />
                         </div>
@@ -195,7 +194,7 @@ export default function MintPage() {
                 <TransactionModal
                     isOpen={showModal}
                     onClose={() => setShowModal(false)}
-                    title="Mint Bead157 Pack"
+                    title="Mint Bead151 Pack"
                     initText={`Confirm transaction to mint ${quantity} pack${quantity > 1 ? "s" : ""} for a total of ${calculateTotalCost()} ETH`}
                     completedText={`Transaction confirmed! You minted ${quantity} pack${quantity > 1 ? "s" : ""}`}
                     initImage="/images/pack.png"
