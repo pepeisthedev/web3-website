@@ -129,6 +129,7 @@ export default function OpenPackTransactionModal({
                   <Card
                     key={index}
                     cardData={card}
+                    showBackDefault={true}
                   />
                 ))}
               </div>
