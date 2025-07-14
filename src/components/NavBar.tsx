@@ -87,7 +87,13 @@ export default function NavBar({ setCurrentView }: NavBarProps) {
                             >
                                 My Collection
                             </button>
-                          
+                            <button
+                                onClick={() => setCurrentView("dex")}
+                                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-white/10 cursor-pointer"
+                            >
+                                Dex
+                            </button>
+
                         </div>
                     </div>
 
@@ -177,13 +183,19 @@ export default function NavBar({ setCurrentView }: NavBarProps) {
                     >
                         My Collection
                     </button>
-                       <button
+                    <button
+                        onClick={() => handleNavClick("dex")}
+                        className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left transition-all duration-200 hover:bg-white/10 transform hover:translate-x-1"
+                    >
+                        Dex
+                    </button>
+                    <button
                         onClick={() => handleNavClick("openPack")}
                         className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left transition-all duration-200 hover:bg-white/10 transform hover:translate-x-1"
                     >
                         Open Pack
                     </button>
-                   
+
                 </div>
             </div>
         </nav>

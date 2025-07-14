@@ -63,7 +63,6 @@ export default function OpenPackPage() {
 
         const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
         const svgContract = new ethers.Contract(svgContractAddress, cardArtSvgRouterContractABI, ethersProvider)
-console.log("AAAFetching card data for IDs:", cardIds)
         try {
             // Fetch all SVGs and metadata in a single call
             const [svgs, metadataArray] = await svgContract.renderAndMetaBatch(cardIds)
