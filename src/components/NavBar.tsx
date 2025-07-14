@@ -85,20 +85,9 @@ export default function NavBar({ setCurrentView }: NavBarProps) {
                                 onClick={() => setCurrentView("collection")}
                                 className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-white/10 cursor-pointer"
                             >
-                                DEX
+                                My Collection
                             </button>
-                            <a
-                                href="#features"
-                                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-white/10"
-                            >
-                                Features
-                            </a>
-                            <a
-                                href="#stats"
-                                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-white/10"
-                            >
-                                Stats
-                            </a>
+                          
                         </div>
                     </div>
 
@@ -186,7 +175,7 @@ export default function NavBar({ setCurrentView }: NavBarProps) {
                         onClick={() => handleNavClick("collection")}
                         className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left transition-all duration-200 hover:bg-white/10 transform hover:translate-x-1"
                     >
-                        DEX
+                        My Collection
                     </button>
                        <button
                         onClick={() => handleNavClick("openPack")}
@@ -194,20 +183,7 @@ export default function NavBar({ setCurrentView }: NavBarProps) {
                     >
                         Open Pack
                     </button>
-                    <a
-                        href="#features"
-                        onClick={closeMobileMenu}
-                        className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium transition-all duration-200 hover:bg-white/10 transform hover:translate-x-1"
-                    >
-                        Features
-                    </a>
-                    <a
-                        href="#stats"
-                        onClick={closeMobileMenu}
-                        className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium transition-all duration-200 hover:bg-white/10 transform hover:translate-x-1"
-                    >
-                        Stats
-                    </a>
+                   
                 </div>
             </div>
         </nav>

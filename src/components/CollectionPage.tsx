@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react"
 import { ethers } from "ethers"
-import Card from "./Card"
+import PopoutCard from "./PopoutCard"
 import { Loader2, Search, Grid, List, ChevronDown, Grid3X3, LayoutGrid } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
@@ -238,7 +238,7 @@ export default function CollectionPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-20 px-4">
+               <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-20 px-4">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
@@ -355,12 +355,11 @@ export default function CollectionPage() {
                 )}
 
                 {/* Card Grid */}
-                {!isLoading && filteredAndSortedCards.length > 0 && (
+        {!isLoading && filteredAndSortedCards.length > 0 && (
                     <div className={getGridClasses()}>
                         {filteredAndSortedCards.map((card, index) => (
                             <div key={`${card.cardId}-${card.tokenId}-${index}`} className="relative">
-                                <Card cardData={card} showBackDefault={false} />
-                                {/* No count badge - removed as requested */}
+                                <PopoutCard cardData={card} showBackDefault={false} />
                             </div>
                         ))}
                     </div>
