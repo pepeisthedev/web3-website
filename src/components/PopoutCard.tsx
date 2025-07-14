@@ -45,6 +45,7 @@ export default function PopoutCard({ cardData, showBackDefault = false }: Popout
           showBackDefault={false} // Always show front in grid
           disableFlip={true} // Disable flip in grid
           forceShowFront={true} // Force front display
+          scaleIfHover={true} // Scale on hover
         />
       </div>
 
@@ -61,6 +62,7 @@ export default function PopoutCard({ cardData, showBackDefault = false }: Popout
               showBackDefault={showBackDefault}
               disableFlip={false} // Allow flipping in popout
               forceShowFront={false} // Don't force front in popout
+              scaleIfHover={false} 
             />
           </div>
 

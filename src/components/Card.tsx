@@ -12,6 +12,7 @@ interface CardProps {
   showBackDefault?: boolean
   disableFlip?: boolean
   forceShowFront?: boolean // New prop to force front display
+    scaleIfHover?: boolean 
 }
 
 export default function Card({
@@ -19,6 +20,7 @@ export default function Card({
   showBackDefault = false,
   disableFlip = false,
   forceShowFront = false,
+  scaleIfHover = true,
 }: CardProps) {
   const [isFlipped, setIsFlipped] = useState(showBackDefault && !forceShowFront)
 
@@ -75,7 +77,7 @@ export default function Card({
   const shouldShowFront = forceShowFront || !isFlipped
 
   return (
-    <div className="w-auto h-auto flex flex-row justify-center items-center m-0">
+     <div className="w-auto h-auto flex flex-row justify-center items-center m-0">
       <div className="w-full max-w-6xl flex flex-row justify-center items-center">
         <div className="w-32 sm:w-48 h-40 sm:h-60 perspective-1000 cursor-pointer m-1 sm:m-2" onClick={handleCardClick}>
           <div
@@ -84,7 +86,9 @@ export default function Card({
             }`}
           >
             {/* Front of card (details) */}
-            <div className="absolute inset-0 w-full h-full backface-hidden bg-gradient-to-bl from-gray-900 via-gray-700 to-black p-2 sm:p-3 shadow-lg rounded-xl border-2 border-black flex flex-col transition-all duration-200 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
+            <div className={`absolute inset-0 w-full h-full backface-hidden bg-gradient-to-bl from-gray-900 via-gray-700 to-black p-2 sm:p-3 shadow-lg rounded-xl border-2 border-black flex flex-col transition-all duration-200 ${
+              scaleIfHover ? 'hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20' : ''
+            }`}>
               {/* Larger image container */}
               <div className="w-full h-24 sm:h-36 flex items-center justify-center rounded-xl mb-1">
                 <img
@@ -113,7 +117,9 @@ export default function Card({
             </div>
 
             {/* Back of card */}
-            <div className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-gradient-to-bl from-blue-900 via-purple-900 to-blue-900 p-2 sm:p-3 shadow-lg rounded-xl border-2 border-black flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20">
+            <div className={`absolute inset-0 w-full h-full backface-hidden rotate-y-180 bg-gradient-to-bl from-blue-900 via-purple-900 to-blue-900 p-2 sm:p-3 shadow-lg rounded-xl border-2 border-black flex flex-col items-center justify-center transition-all duration-200 ${
+              scaleIfHover ? 'hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20' : ''
+            }`}>
               <div className="w-16 sm:w-24 h-16 sm:h-24 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mb-4">
                 <span className="text-xl sm:text-3xl font-bold text-white">B</span>
               </div>

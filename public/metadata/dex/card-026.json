@@ -1,0 +1,14 @@
+[
+  {
+    "trait_type": "Card",
+    "value": "Card #26"
+  },
+  {
+    "trait_type": "Color",
+    "value": "hsl(322,70%,80%)"
+  },
+  {
+    "trait_type": "Rarity",
+    "value": "Common"
+  }
+]

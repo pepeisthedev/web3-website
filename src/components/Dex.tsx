@@ -6,6 +6,7 @@ import { ethers } from "ethers"
 import { Loader2, Eye, EyeOff } from "lucide-react"
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
+import Card from "./Card" 
 
 // Contract addresses and ABIs
 import cardContractABI from "../assets/abi/Bead151Card.json"
@@ -32,7 +33,7 @@ interface DexEntry {
 export default function Dex() {
     const { address, isConnected } = useAppKitAccount()
     const { walletProvider } = useAppKitProvider("eip155")
-
+ const [selectedCardData, setSelectedCardData] = useState<CardData | null>(null)
     const [dexEntries, setDexEntries] = useState<DexEntry[]>([])
     const [ownedCards, setOwnedCards] = useState<Set<number>>(new Set())
     const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -64,6 +65,32 @@ export default function Dex() {
         }
         setDexEntries(entries)
     }
+
+    const loadCardMetadata = async (cardId: number): Promise<CardData | null> => {
+        try {
+            const response = await fetch(`/metadata/dex/card-${cardId.toString().padStart(3, '0')}.json`)
+            if (!response.ok) {
+                throw new Error(`Failed to load metadata for card ${cardId}`)
+            }
+            
+            const metadata = await response.json()
+            console.log(`Loaded metadata for card ${cardId}:`, metadata)
+            
+            // Create CardData object
+            const cardData: CardData = {
+                tokenId: 0, // Not applicable for DEX view
+                cardId: cardId,
+                svg: `/images/dex/svgs/card-${cardId.toString().padStart(3, '0')}.svg`,
+                description: JSON.stringify(metadata)
+            }
+            
+            return cardData
+        } catch (error) {
+            console.error(`Error loading metadata for card ${cardId}:`, error)
+            return null
+        }
+    }
+
 
     const fetchAllUserCards = async (userAddress: string): Promise<CardData[]> => {
         if (!walletProvider || !userAddress) return []
@@ -146,10 +173,13 @@ export default function Dex() {
     const ownedCount = ownedCards.size
     const completionPercentage = Math.round((ownedCount / 151) * 100)
 
-    const handleCardClick = (entry: DexEntry) => {
-   
-            setSelectedCard(entry)
+
+    const handleCardClick = async (entry: DexEntry) => {
+        setSelectedCard(entry)
         
+        // Load the full card data for the Card component
+        const cardData = await loadCardMetadata(entry.cardId)
+        setSelectedCardData(cardData)
     }
 
     const getRarityColor = (rarity?: string) => {
@@ -273,36 +303,52 @@ export default function Dex() {
                 )}
             </div>
 
+            
+            
             {/* Card Detail Modal */}
             {selectedCard && (
-                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-md w-full">
-                        <div className="text-center space-y-4">
-                            <img
-                                src={selectedCard.imageUrl}
-                                alt={selectedCard.cardName}
-                                className="w-48 h-48 mx-auto object-contain rounded-lg"
-                            />
-                            <div>
-                                <h3 className="text-2xl font-bold text-white">{selectedCard.cardName}</h3>
-                                <p className="text-gray-400">#{selectedCard.cardId.toString().padStart(3, '0')}</p>
-                                {selectedCard.rarity && (
-                                    <p className={`font-semibold ${getRarityColor(selectedCard.rarity)}`}>
-                                        {selectedCard.rarity}
-                                    </p>
-                                )}
+                <div 
+                    className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+                    onClick={() => {
+                        // Close modal when clicking the backdrop
+                        setSelectedCard(null)
+                        setSelectedCardData(null)
+                    }}
+                >
+                    <div 
+                        className="relative bg-transparent rounded-2xl p-6 max-w-lg w-full"
+                        onClick={(e) => {
+                            // Prevent modal from closing when clicking inside the card area
+                            e.stopPropagation()
+                        }}
+                    >
+                        {/* Card Component */}
+                        {selectedCardData ? (
+                            <div className="flex flex-col items-center space-y-6">
+                                {/* Responsive scale - larger on mobile */}
+                                <div className="transform scale-[2.5] sm:scale-[2] md:scale-150 mb-12 sm:mb-8">
+                                    <Card 
+                                        cardData={selectedCardData}
+                                        showBackDefault={false}
+                                        disableFlip={false}  // Enable flip when clicking the card
+                                        forceShowFront={false}
+                                        scaleIfHover={false}
+                                    />
+                                </div>
+                            
                             </div>
-                            <Button
-                                onClick={() => setSelectedCard(null)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
-                            >
-                                Close
-                            </Button>
-                        </div>
+                        ) : (
+                            // Loading state while metadata loads
+                            <div className="flex flex-col items-center space-y-4">
+                                <Loader2 className="h-8 w-8 text-blue-400 animate-spin" />
+                                <p className="text-white">Loading card details...</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
-
+            
+            
             {/* Custom CSS for responsive grid */}
             <style>{`
                 @media (min-width: 1280px) {
