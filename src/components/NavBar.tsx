@@ -9,9 +9,10 @@ import { SectionType } from "./types/SectionTypes";
 
 interface NavBarProps {
     setCurrentView: (view: SectionType) => void
+    currentView?: SectionType
 }
 
-export default function NavBar({ setCurrentView }: NavBarProps) {
+export default function NavBar({ setCurrentView, currentView }: NavBarProps) {
     const { open } = useAppKit()
     const { isConnected, address } = useAppKitAccount()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -48,8 +49,21 @@ export default function NavBar({ setCurrentView }: NavBarProps) {
         closeMobileMenu()
     }
 
+    const getNavBarBackground = (): string => {
+        switch (currentView) {
+            case "eggs":
+                return "bg-green-900/80 backdrop-blur-md"
+            case "collection":
+                return "bg-purple-900/80 backdrop-blur-md"
+            case "dex":
+                return "bg-black/80 backdrop-blur-md"
+            default:
+                return "bg-purple-900/80 backdrop-blur-md"
+        }
+    }
+
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-md border-b border-white/10">
+        <nav className={`fixed top-0 left-0 right-0 z-50 ${getNavBarBackground()} border-b border-white/10 transition-colors duration-500`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo/Brand */}
@@ -167,7 +181,7 @@ export default function NavBar({ setCurrentView }: NavBarProps) {
 
             {/* Mobile menu with smooth animation */}
             <div
-                className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${isMobileMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
+                className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                     }`}
                 id="mobile-menu"
             >
