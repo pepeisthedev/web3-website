@@ -94,6 +94,13 @@ export default function NavBar({ setCurrentView }: NavBarProps) {
                                 Dex
                             </button>
 
+                            <button
+                                onClick={() => setCurrentView("eggs")}
+                                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-white/10 cursor-pointer"
+                            >
+                                Eggs
+                            </button>
+
                         </div>
                     </div>
 
@@ -194,6 +201,13 @@ export default function NavBar({ setCurrentView }: NavBarProps) {
                         className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left transition-all duration-200 hover:bg-white/10 transform hover:translate-x-1"
                     >
                         Open Pack
+                    </button>
+
+                    <button
+                        onClick={() => handleNavClick("eggs")}
+                        className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left transition-all duration-200 hover:bg-white/10 transform hover:translate-x-1"
+                    >
+                        Eggs
                     </button>
 
                 </div>

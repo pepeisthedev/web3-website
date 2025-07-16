@@ -7,6 +7,7 @@ import MintPage from "./MintPage"
 import OpenPack from "./OpenPack"
 import { SectionType } from "./types/SectionTypes"
 import CollectionPage from "./CollectionPage"
+import Eggs from "./Eggs"
 
 
 export default function MainPage(): React.JSX.Element {
@@ -36,6 +37,10 @@ export default function MainPage(): React.JSX.Element {
 
                 {currentView === "dex" && (
                     <Dex />
+                )}
+
+                {currentView === "eggs" && (
+                    <Eggs />
                 )}
             </div>
         </>
