@@ -5,11 +5,21 @@ import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react"
 import { ethers } from "ethers"
 import { Button } from "./ui/button"
 import { Loader2, Timer, Sparkles } from "lucide-react"
+import Card from "./Card"
 
 // Contract addresses and ABIs
 import eggContractABI from "../assets/abi/Bead151Egg.json"
+import cardContractABI from "../assets/abi/Bead151Card.json"
+import cardArtSvgRouterContractABI from "../assets/abi/Bead151ArtRouter.json"
 
 const eggContractAddress = import.meta.env.VITE_BEAD151_EGG_CONTRACT
+const cardContractAddress = import.meta.env.VITE_BEAD151_CARD_CONTRACT
+const svgContractAddress = import.meta.env.VITE_BEAD151_CARD_ART_CONTRACT
+
+interface CardData {
+    svg: string
+    description: string
+}
 
 interface EggData {
     tokenId: number
@@ -40,6 +50,8 @@ export default function Eggs() {
     const [timeToHatch, setTimeToHatch] = useState<number>(0)
     const [showHatchModal, setShowHatchModal] = useState<boolean>(false)
     const [showIncubateModal, setShowIncubateModal] = useState<boolean>(false)
+    const [showHatchedCardModal, setShowHatchedCardModal] = useState<boolean>(false)
+    const [hatchedCard, setHatchedCard] = useState<CardData | null>(null)
     const [dotCount, setDotCount] = useState<number>(0)
     const [incubationPeriod, setIncubationPeriod] = useState<number>(86400) // Default 24 hours
     
@@ -108,6 +120,24 @@ export default function Eggs() {
         }, 1000)
     }
 
+    const fetchCardData = async (cardId: number): Promise<CardData | null> => {
+        if (!walletProvider) return null
+
+        const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
+        const svgContract = new ethers.Contract(svgContractAddress, cardArtSvgRouterContractABI, ethersProvider)
+        
+        try {
+            const [svg, meta] = await Promise.all([
+                svgContract.render(cardId),
+                svgContract.meta(cardId)
+            ])
+            return { svg, description: meta }
+        } catch (error) {
+            console.error(`Error fetching card ${cardId}:`, error)
+            return null
+        }
+    }
+
     const fetchUserEggs = async () => {
         if (!address || !walletProvider) return
 
@@ -120,14 +150,14 @@ export default function Eggs() {
             try {
                 const period = await contract.incubationPeriod()
                 setIncubationPeriod(Number(period))
-                console.log("Incubation period:", Number(period))
+              //  console.log("Incubation period:", Number(period))
             } catch (error) {
                 console.error("Error fetching incubation period:", error)
             }
 
             // Get all egg URIs for the user
             const eggURIs = await contract.getAllEggURIs(address)
-            console.log("Fetched egg URIs:", eggURIs)
+        //    console.log("Fetched egg URIs:", eggURIs)
 
             // Check if eggURIs is empty or not an array
             if (!eggURIs || !Array.isArray(eggURIs) || eggURIs.length === 0) {
@@ -142,8 +172,8 @@ export default function Eggs() {
             const tokenIds = eggURIs[0] || []
             const uriStrings = eggURIs[1] || []
 
-            console.log("Token IDs:", tokenIds)
-            console.log("URI Strings:", uriStrings)
+           // console.log("Token IDs:", tokenIds)
+           // console.log("URI Strings:", uriStrings)
 
             if (tokenIds.length === 0 || uriStrings.length === 0) {
                 console.log("No token IDs or URIs found")
@@ -243,10 +273,34 @@ export default function Eggs() {
         try {
             const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
             const signer = await ethersProvider.getSigner()
-            const contract = new ethers.Contract(eggContractAddress, eggContractABI, signer)
+            const eggContract = new ethers.Contract(eggContractAddress, eggContractABI, signer)
+            const cardContract = new ethers.Contract(cardContractAddress, cardContractABI, signer)
 
-            const tx = await contract.hatch(hatchableEgg.tokenId)
-            await tx.wait()
+            const tx = await eggContract.hatch(hatchableEgg.tokenId)
+            const receipt = await tx.wait()
+
+            // Parse events to get the hatched card ID
+            let hatchedCardId: number | null = null
+            receipt.logs.forEach((log: any) => {
+                try {
+                    const parsedLog = cardContract.interface.parseLog(log)
+                    if (parsedLog?.name === "EggHatched") {
+                        hatchedCardId = Number(parsedLog.args[2]) // cardId is the 3rd argument
+                        console.log("Hatched card ID:", hatchedCardId)
+                    }
+                } catch (e) {
+                    console.log("Unparsed log:", log)
+                }
+            })
+
+            // Fetch card data if we got a card ID
+            if (hatchedCardId !== null) {
+                const cardData = await fetchCardData(hatchedCardId)
+                if (cardData) {
+                    setHatchedCard(cardData)
+                    setShowHatchedCardModal(true)
+                }
+            }
 
             // Refresh eggs and close modal
             await fetchUserEggs()
@@ -273,7 +327,7 @@ export default function Eggs() {
 
     if (!isConnected) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-green-900 via-green-800 to-green-900 pt-20 px-4">
+            <div className="min-h-screen bg-gradient-to-b from-green-900 via-green-800 to-green-900 pt-4 md:pt-20 px-4">
                 <div className="max-w-4xl mx-auto text-center">
                     <h1 className="text-4xl font-bold text-yellow-300 mb-8 font-mono">EGG INCUBATOR</h1>
                     <div className="bg-green-800 border-4 border-yellow-300 rounded-lg p-8">
@@ -285,16 +339,14 @@ export default function Eggs() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-green-900 via-green-800 to-green-900 pt-20 px-4">
+        <div className="min-h-screen bg-gradient-to-b from-green-900 via-green-800 to-green-900 pt-4 md:pt-20 px-4">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-4xl md:text-5xl font-bold text-yellow-300 mb-4 font-mono tracking-wider">
                         EGG INCUBATOR
                     </h1>
-                    <div className="text-green-300 font-mono text-lg">
-                        ◄ PROFESSOR OAK'S LAB ►
-                    </div>
+                 
                 </div>
 
                 {/* Incubator Section */}
@@ -378,14 +430,16 @@ export default function Eggs() {
                                         }
                                     }}
                                     className={`
-                                        relative bg-green-700 border-2 rounded-lg p-4 cursor-pointer transition-all duration-300
+                                        relative border-2 rounded-lg p-4 cursor-pointer transition-all duration-300
                                         ${selectedEgg?.tokenId === egg.tokenId 
-                                            ? 'border-yellow-300 bg-green-600' 
+                                            ? 'border-yellow-300 ' 
                                             : 'border-green-600 hover:border-yellow-400'
                                         }
                                         ${egg.hatchable 
                                             ? 'border-yellow-300 bg-yellow-900/30 animate-pulse shadow-lg shadow-yellow-300/50' 
-                                            : ''
+                                            : egg.incubating
+                                            ? 'bg-blue-900/40 border-blue-400'
+                                            : 'bg-green-700'
                                         }
                                     `}
                                 >
@@ -537,6 +591,47 @@ export default function Eggs() {
                                     className="flex-1 bg-gray-600 hover:bg-gray-700 border-4 border-gray-400 text-white font-mono font-bold py-3"
                                 >
                                     CANCEL
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Hatched Card Modal */}
+            {showHatchedCardModal && hatchedCard && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-green-800 border-4 border-yellow-300 rounded-lg p-8 max-w-md w-full">
+                        <div className="text-center space-y-6">
+                            <h2 className="text-2xl font-bold text-yellow-300 font-mono">
+                                EGG HATCHED!
+                            </h2>
+                            
+                            <div className="text-green-300 font-mono text-lg mb-4">
+                                You got a new card!
+                            </div>
+
+                            {/* Card Display */}
+                            <div className="flex justify-center">
+                                <div className="w-48">
+                                    <Card 
+                                        cardData={hatchedCard}
+                                        showBackDefault={true}
+                                        disableFlip={false}
+                                        scaleIfHover={false}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-center">
+                                <Button
+                                    onClick={() => {
+                                        setShowHatchedCardModal(false)
+                                        setHatchedCard(null)
+                                    }}
+                                    className="bg-yellow-600 hover:bg-yellow-700 border-4 border-yellow-400 text-black font-mono font-bold py-3 px-8"
+                                >
+                                     EGGSIT!
                                 </Button>
                             </div>
                         </div>

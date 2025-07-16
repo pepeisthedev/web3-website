@@ -527,6 +527,50 @@
         "type": "uint256"
       }
     ],
+    "name": "getIncubationDetails",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isIncubating",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentTime",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "elapsed",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "incubationPeriodSeconds",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "timeRemaining",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
     "name": "getTimeRemaining",
     "outputs": [
       {
