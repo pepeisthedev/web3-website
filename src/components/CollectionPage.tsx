@@ -3,18 +3,22 @@
 import { useState, useEffect } from "react"
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react"
 import { ethers } from "ethers"
-import PopoutCard from "./PopoutCard"
-import { Loader2, Search, Grid, List, ChevronDown, Grid3X3, LayoutGrid } from "lucide-react"
+import Card from "./Card"
+import { Loader2, Search, Grid, List, ChevronDown, Grid3X3, LayoutGrid, Heart, ArrowUp } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Checkbox } from "./ui/checkbox"
 
-// Contract addresses and ABIs - adjust these imports as needed
+// Contract addresses and ABIs
 import cardContractABI from "../assets/abi/Bead151Card.json"
 import routerContractABI from "../assets/abi/Bead151ArtRouter.json"
+import candyContractABI from "../assets/abi/Bead151Candy.json"
+import candyPerCardContractABI from "../assets/abi/Bead151CandyPerCard.json"
 
 const cardContractAddress = import.meta.env.VITE_BEAD151_CARD_CONTRACT
 const routerContractAddress = import.meta.env.VITE_BEAD151_CARD_ART_CONTRACT
+const candyContractAddress = import.meta.env.VITE_BEAD151_CANDY_CONTRACT
+const candyPerCardContractAddress = import.meta.env.VITE_BEAD151_CANDY_PER_CARD_CONTRACT
 
 interface CardData {
     tokenId: number
@@ -27,7 +31,13 @@ interface CollectionCard extends CardData {
     count: number
 }
 
-type SortOption = 'cardId-asc' | 'cardId-desc' | 'rarity-asc' | 'rarity-desc'
+interface CandyRates {
+    candies3Cards: number[]
+    candies5Cards: number[]
+    candies6Cards: number[]
+    candies7Cards: number[]
+}
+
 type ViewMode = 'large-grid' | 'small-grid' | 'list'
 
 export default function CollectionPage() {
@@ -36,17 +46,102 @@ export default function CollectionPage() {
 
     const [allCards, setAllCards] = useState<CardData[]>([])
     const [collectionCards, setCollectionCards] = useState<CollectionCard[]>([])
+    const [selectedCard, setSelectedCard] = useState<CollectionCard | null>(null)
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [searchTerm, setSearchTerm] = useState<string>("")
     const [viewMode, setViewMode] = useState<ViewMode>('large-grid')
-    const [sortBy, setSortBy] = useState<SortOption>('cardId-asc')
     const [hideDuplicates, setHideDuplicates] = useState<boolean>(false)
+    const [showOnlyDuplicates, setShowOnlyDuplicates] = useState<boolean>(false)
+    const [userCandyBalance, setUserCandyBalance] = useState<number>(0)
+    const [candyRates, setCandyRates] = useState<CandyRates>({
+        candies3Cards: [],
+        candies5Cards: [],
+        candies6Cards: [],
+        candies7Cards: []
+    })
+    const [showDoctorModal, setShowDoctorModal] = useState<boolean>(false)
+    const [isLoadingCandy, setIsLoadingCandy] = useState<boolean>(false)
 
     useEffect(() => {
         if (isConnected && address) {
             fetchUserCollection()
+            fetchCandyData()
         }
     }, [isConnected, address])
+
+    const fetchCandyData = async () => {
+        if (!walletProvider || !address) return
+
+        setIsLoadingCandy(true)
+        try {
+            const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
+            const candyContract = new ethers.Contract(candyContractAddress, candyContractABI, ethersProvider)
+            const candyPerCardContract = new ethers.Contract(candyPerCardContractAddress, candyPerCardContractABI, ethersProvider)
+
+            // Get user's candy balance (token ID 0 for candies)
+            const candyBalance = await candyContract.balanceOf(address, 1)
+            setUserCandyBalance(Number(candyBalance))
+
+            // Get candy rates for different card types
+            const [candies3Cards, candies5Cards, candies6Cards, candies7Cards] = await Promise.all([
+                candyPerCardContract.getCandies3Cards(),
+                candyPerCardContract.getCandies5Cards(),
+                candyPerCardContract.getCandies6Cards(),
+                candyPerCardContract.getCandies7Cards()
+            ])
+
+            setCandyRates({
+                candies3Cards: candies3Cards.map((id: any) => Number(id)),
+                candies5Cards: candies5Cards.map((id: any) => Number(id)),
+                candies6Cards: candies6Cards.map((id: any) => Number(id)),
+                candies7Cards: candies7Cards.map((id: any) => Number(id))
+            })
+
+        } catch (error) {
+            console.error("Error fetching candy data:", error)
+        }
+        setIsLoadingCandy(false)
+    }
+
+    const getCandyReward = (cardId: number): number => {
+        if (candyRates.candies7Cards.includes(cardId)) return 7
+        if (candyRates.candies6Cards.includes(cardId)) return 6
+        if (candyRates.candies5Cards.includes(cardId)) return 5
+        if (candyRates.candies3Cards.includes(cardId)) return 3
+        return 0 // Default if card not found in any array
+    }
+
+    const handleSendToDoctor = async () => {
+        if (!selectedCard || !walletProvider) return
+
+        try {
+            const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
+            const signer = await ethersProvider.getSigner()
+            const cardContract = new ethers.Contract(cardContractAddress, cardContractABI, signer)
+
+            const tx = await cardContract.sendToDoctor(selectedCard.tokenId)
+            console.log("token id sent to doctor:", selectedCard.tokenId)
+            console.log("Card id sent to doctor:", selectedCard.cardId)
+            await tx.wait()
+
+            // Refresh collection and candy balance
+            await Promise.all([fetchUserCollection(), fetchCandyData()])
+            setSelectedCard(null)
+            setShowDoctorModal(false)
+        } catch (error) {
+            console.error("Error sending card to doctor:", error)
+        }
+    }
+
+    const handleCardClick = (card: CollectionCard) => {
+        if (selectedCard?.tokenId === card.tokenId) {
+            // If clicking the same card, deselect it
+            setSelectedCard(null)
+        } else {
+            // Otherwise, select the new card
+            setSelectedCard(card)
+        }
+    }
 
     const fetchAllUserCards = async (userAddress: string): Promise<CardData[]> => {
         console.log("🔍 Fetching user collection for address:", userAddress)
@@ -148,20 +243,7 @@ export default function CollectionPage() {
     }
 
     const sortCards = (cards: CollectionCard[]): CollectionCard[] => {
-        return [...cards].sort((a, b) => {
-            switch (sortBy) {
-                case 'cardId-asc':
-                    return a.cardId - b.cardId
-                case 'cardId-desc':
-                    return b.cardId - a.cardId
-                case 'rarity-asc':
-                    return getRarityValue(a.description).localeCompare(getRarityValue(b.description))
-                case 'rarity-desc':
-                    return getRarityValue(b.description).localeCompare(getRarityValue(a.description))
-                default:
-                    return 0
-            }
-        })
+        return [...cards].sort((a, b) => a.cardId - b.cardId) // Always sort by cardId ascending
     }
 
     const filteredAndSortedCards = (() => {
@@ -201,6 +283,11 @@ export default function CollectionPage() {
             })
         }
 
+        // Show only duplicates if checkbox is checked (cards with count > 1)
+        if (showOnlyDuplicates) {
+            cards = cards.filter(card => card.count > 1)
+        }
+
         // Sort cards
         return sortCards(cards)
     })()
@@ -223,14 +310,11 @@ export default function CollectionPage() {
 
     if (!isConnected) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-20 px-4">
+            <div className="min-h-screen bg-gradient-to-b from-teal-900 via-cyan-800 to-teal-900 pt-4 md:pt-20 px-4">
                 <div className="max-w-6xl mx-auto text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-8">Bead151 DEX</h1>
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                        <p className="text-xl text-gray-300 mb-6">Connect your wallet to view your card collection</p>
-                        <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-                            Connect Wallet
-                        </Button>
+                    <h1 className="text-4xl font-bold text-yellow-300 mb-8 font-mono">BEAD151 COLLECTION</h1>
+                    <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-8">
+                        <p className="text-yellow-300 text-xl font-mono">Connect your wallet to view your collection</p>
                     </div>
                 </div>
             </div>
@@ -238,143 +322,332 @@ export default function CollectionPage() {
     }
 
     return (
-               <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-20 px-4">
+        <div className="min-h-screen bg-gradient-to-b from-teal-900 via-cyan-800 to-teal-900 pt-4 md:pt-20 px-4">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Bead151 DEX</h1>
-                    <p className="text-xl text-gray-300">Your Card Collection</p>
+                    <h1 className="text-4xl md:text-5xl font-bold text-yellow-300 mb-4 font-mono tracking-wider">
+                        BEAD151 COLLECTION
+                    </h1>
+                    <p className="text-xl text-cyan-300 font-mono">Your Trading Card Collection</p>
                 </div>
 
-                {/* Stats and Controls */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 mb-8">
-                    <div className="flex flex-col gap-6">
-                        {/* Stats */}
-                        <div className="flex gap-8 text-center justify-center">
-                            <div>
-                                <p className="text-2xl font-bold text-white">{totalCards}</p>
-                                <p className="text-gray-400">Total Cards</p>
+                {/* Stats */}
+                <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 mb-8">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div className="flex gap-8 text-center">
+                            <div className="bg-black border-2 border-gray-400 rounded p-4">
+                                <div className="text-green-400 font-mono text-center">
+                                    <div className="text-sm mb-2">TOTAL CARDS</div>
+                                    <div className="text-2xl font-bold tracking-widest">{totalCards.toString().padStart(3, '0')}</div>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-2xl font-bold text-white">{uniqueCards}</p>
-                                <p className="text-gray-400">Unique Cards</p>
+                            <div className="bg-black border-2 border-gray-400 rounded p-4">
+                                <div className="text-green-400 font-mono text-center">
+                                    <div className="text-sm mb-2">UNIQUE CARDS</div>
+                                    <div className="text-2xl font-bold tracking-widest">{uniqueCards.toString().padStart(3, '0')}</div>
+                                </div>
+                            </div>
+                            <div className="bg-black border-2 border-gray-400 rounded p-4">
+                                <div className="text-green-400 font-mono text-center">
+                                    <div className="text-sm mb-2">CANDIES</div>
+                                    <div className="text-2xl font-bold tracking-widest">{userCandyBalance.toString().padStart(3, '0')}</div>
+                                </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        {/* Controls */}
-                        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                            {/* Search */}
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                                <Input
-                                    type="text"
-                                    placeholder="Search cards, rarity, color..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10 bg-white/10 border-white/20 text-white placeholder-gray-400 w-80"
-                                />
-                            </div>
-                            
-                            <div className="flex gap-4 items-center">
-                                {/* Hide Duplicates Checkbox */}
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="hideDuplicates"
-                                        checked={hideDuplicates}
-                                        onCheckedChange={(checked) => setHideDuplicates(checked as boolean)}
-                                        className="border-white/20 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                {/* Selected Card Section - Always Visible */}
+                <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 mb-8">
+                    <h2 className="text-2xl font-bold text-yellow-300 mb-6 font-mono text-center">
+                        SELECTED CARD
+                    </h2>
+                    <div className="flex flex-col items-center gap-2 md:gap-6">
+                        {/* Card Display */}
+                        <div className="flex-shrink-0">
+                            <div className="w-48 h-42 md:h-64">
+                                {selectedCard ? (
+                                    <Card 
+                                        cardData={selectedCard}
+                                        showBackDefault={false}
+                                        disableFlip={true}
+                                        forceShowFront={true}
+                                        scaleIfHover={false}
                                     />
-                                    <label htmlFor="hideDuplicates" className="text-sm text-white cursor-pointer">
-                                        Hide duplicates
-                                    </label>
-                                </div>
-
-                                {/* Sort Dropdown */}
-                                <select
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                    className="bg-white/10 border border-white/20 text-white rounded-lg px-3 py-2 text-sm"
-                                >
-                                    <option value="cardId-asc">Card ID ↑</option>
-                                    <option value="cardId-desc">Card ID ↓</option>
-                                    <option value="rarity-asc">Rarity A-Z</option>
-                                    <option value="rarity-desc">Rarity Z-A</option>
-                                </select>
-
-                                {/* View Mode Buttons */}
-                                <div className="flex border border-white/20 rounded-lg overflow-hidden">
-                                    <Button
-                                        onClick={() => setViewMode('large-grid')}
-                                        variant={viewMode === 'large-grid' ? 'default' : 'outline'}
-                                        size="sm"
-                                        className={`${viewMode === 'large-grid' ? 'bg-purple-600' : 'bg-transparent border-0'} text-white`}
-                                        title="Large Grid"
-                                    >
-                                        <LayoutGrid className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        onClick={() => setViewMode('small-grid')}
-                                        variant={viewMode === 'small-grid' ? 'default' : 'outline'}
-                                        size="sm"
-                                        className={`${viewMode === 'small-grid' ? 'bg-purple-600' : 'bg-transparent border-0'} text-white`}
-                                        title="Small Grid"
-                                    >
-                                        <Grid3X3 className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        onClick={() => setViewMode('list')}
-                                        variant={viewMode === 'list' ? 'default' : 'outline'}
-                                        size="sm"
-                                        className={`${viewMode === 'list' ? 'bg-purple-600' : 'bg-transparent border-0'} text-white`}
-                                        title="List View"
-                                    >
-                                        <List className="h-4 w-4" />
-                                    </Button>
-                                </div>
+                                ) : (
+                                    <div className="w-full h-full bg-gray-600 border-2 border-gray-400 rounded-lg flex flex-col items-center justify-center">
+                                        <div className="text-gray-400 font-mono text-center">
+                                            <div className="text-lg mb-2">📋</div>
+                                            <div className="text-sm">SELECT A CARD</div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
+                        </div>
+                        
+                        {/* Card Info */}
+                        <div className="text-center text-cyan-300 font-mono">
+                            <h3 className="text-xl font-bold mb-2">
+                                {selectedCard ? (() => {
+                                    try {
+                                        const traits = JSON.parse(selectedCard.description)
+                                        const cardTrait = traits.find((trait: any) => trait.trait_type === "Card")
+                                        return cardTrait ? cardTrait.value : `Card #${selectedCard.cardId}`
+                                    } catch {
+                                        return `Card #${selectedCard.cardId}`
+                                    }
+                                })() : "No Card Selected"}
+                            </h3>
+                            <p className="text-sm mb-4">
+                                {selectedCard ? `Card ID: #${selectedCard.cardId}` : "Click on a card below to select it"}
+                            </p>
+                        </div>
+                        
+                        {/* Card Actions */}
+                        <div className="flex gap-4 w-full max-w-md">
+                            <Button
+                                onClick={() => selectedCard && setShowDoctorModal(true)}
+                                disabled={!selectedCard}
+                                className={`flex-1 border-4 font-mono font-bold py-3 ${
+                                    selectedCard 
+                                        ? 'bg-red-600 hover:bg-red-700 border-red-400 text-white'
+                                        : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
+                                }`}
+                            >
+                                <Heart className="w-4 h-4 mr-2" />
+                                SEND TO DOCTOR
+                            </Button>
+                            <Button
+                                disabled
+                                className="flex-1 bg-gray-600 border-4 border-gray-400 text-gray-300 font-mono font-bold py-3 cursor-not-allowed"
+                            >
+                                <ArrowUp className="w-4 h-4 mr-2" />
+                                UPGRADE
+                            </Button>
                         </div>
                     </div>
                 </div>
 
                 {/* Loading State */}
                 {isLoading && (
-                    <div className="flex items-center justify-center py-12">
-                        <Loader2 className="h-8 w-8 text-blue-400 animate-spin mr-2" />
-                        <span className="text-white">Loading your collection...</span>
+                    <div className="text-center py-8">
+                        <Loader2 className="h-8 w-8 text-yellow-300 animate-spin mx-auto mb-4" />
+                        <p className="text-yellow-300 font-mono">Loading collection...</p>
                     </div>
                 )}
 
                 {/* Empty State */}
                 {!isLoading && collectionCards.length === 0 && (
                     <div className="text-center py-12">
-                        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                            <p className="text-xl text-gray-300 mb-4">No cards found in your collection</p>
-                            <p className="text-gray-400">Open some packs to start collecting!</p>
+                        <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-8">
+                            <p className="text-xl text-yellow-300 mb-4 font-mono">No cards found in your collection</p>
+                            <p className="text-cyan-300 font-mono">Open some packs to start collecting!</p>
                         </div>
                     </div>
                 )}
 
-                {/* Card Grid */}
-        {!isLoading && filteredAndSortedCards.length > 0 && (
-                    <div className={getGridClasses()}>
-                        {filteredAndSortedCards.map((card, index) => (
-                            <div key={`${card.cardId}-${card.tokenId}-${index}`} className="relative">
-                                <PopoutCard cardData={card} showBackDefault={false} />
+                {/* Combined Controls and Card Collection */}
+                {!isLoading && collectionCards.length > 0 && (
+                    <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6">
+                        <h2 className="text-2xl font-bold text-yellow-300 mb-6 font-mono text-center">
+                            CARD COLLECTION
+                        </h2>
+                        
+                        {/* Controls */}
+                        <div className="flex flex-col gap-4 mb-8">
+                            {/* Search */}
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-yellow-300 h-4 w-4" />
+                                <Input
+                                    type="text"
+                                    placeholder="Search cards, rarity, color..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-10 bg-black border-2 border-gray-400 text-green-400 placeholder-gray-400 font-mono"
+                                />
                             </div>
-                        ))}
-                    </div>
-                )}
+                            
+                            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                                {/* Filter Checkboxes */}
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="hideDuplicates"
+                                            checked={hideDuplicates}
+                                            disabled={showOnlyDuplicates}
+                                            onCheckedChange={(checked) => {
+                                                setHideDuplicates(checked as boolean)
+                                                if (checked) setShowOnlyDuplicates(false)
+                                            }}
+                                            className="border-yellow-300 data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
+                                        />
+                                        <label htmlFor="hideDuplicates" className={`text-sm cursor-pointer font-mono ${showOnlyDuplicates ? 'text-gray-400' : 'text-yellow-300'}`}>
+                                            HIDE DUPLICATES
+                                        </label>
+                                    </div>
+                                    
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="showOnlyDuplicates"
+                                            checked={showOnlyDuplicates}
+                                            disabled={hideDuplicates}
+                                            onCheckedChange={(checked) => {
+                                                setShowOnlyDuplicates(checked as boolean)
+                                                if (checked) setHideDuplicates(false)
+                                            }}
+                                            className="border-yellow-300 data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
+                                        />
+                                        <label htmlFor="showOnlyDuplicates" className={`text-sm cursor-pointer font-mono ${hideDuplicates ? 'text-gray-400' : 'text-yellow-300'}`}>
+                                            SHOW ONLY DUPLICATES
+                                        </label>
+                                    </div>
+                                </div>
 
-                {/* Search Results */}
-                {!isLoading && searchTerm && filteredAndSortedCards.length === 0 && collectionCards.length > 0 && (
-                    <div className="text-center py-12">
-                        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                            <p className="text-xl text-gray-300 mb-2">No cards match your search</p>
-                            <p className="text-gray-400">Try searching for a different card name, rarity, or color</p>
+                                {/* View Mode Buttons */}
+                                <div className="flex border-2 border-yellow-300 rounded-lg overflow-hidden">
+                                    <Button
+                                        onClick={() => setViewMode('large-grid')}
+                                        className={`${viewMode === 'large-grid' ? 'bg-cyan-600 border-cyan-400' : 'bg-teal-700 border-gray-400'} text-yellow-300 font-mono border-2`}
+                                        size="sm"
+                                    >
+                                        <LayoutGrid className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        onClick={() => setViewMode('small-grid')}
+                                        className={`${viewMode === 'small-grid' ? 'bg-cyan-600 border-cyan-400' : 'bg-teal-700 border-gray-400'} text-yellow-300 font-mono border-2`}
+                                        size="sm"
+                                    >
+                                        <Grid3X3 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
+
+                        {/* Card Grid */}
+                        {filteredAndSortedCards.length > 0 ? (
+                            <div className={getGridClasses()}>
+                                {filteredAndSortedCards.map((card, index) => (
+                                    <div 
+                                        key={`${card.cardId}-${card.tokenId}-${index}`} 
+                                        className={`
+                                            relative cursor-pointer transition-all duration-300 p-2 rounded-lg border-2
+                                            ${selectedCard?.tokenId === card.tokenId 
+                                                ? 'border-yellow-300 bg-yellow-900/30' 
+                                                : 'border-transparent hover:border-cyan-400'
+                                            }
+                                        `}
+                                        onClick={() => handleCardClick(card)}
+                                    >
+                                        <Card 
+                                            cardData={card} 
+                                            showBackDefault={false} 
+                                            disableFlip={true}
+                                            forceShowFront={true}
+                                            scaleIfHover={false}
+                                        />
+                                        
+                                        {/* Card count badge */}
+                                        {card.count > 1 && (
+                                            <div className="absolute -top-2 -right-2 bg-yellow-300 text-black rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold font-mono">
+                                                {card.count}
+                                            </div>
+                                        )}
+                          
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            /* Search Results - No matches */
+                            searchTerm && (
+                                <div className="text-center py-12">
+                                    <p className="text-xl text-yellow-300 mb-2 font-mono">No cards match your search</p>
+                                    <p className="text-cyan-300 font-mono">Try searching for a different card name, rarity, or color</p>
+                                </div>
+                            )
+                        )}
                     </div>
                 )}
             </div>
+
+            {/* Doctor Modal */}
+            {showDoctorModal && selectedCard && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                        <div className="text-center space-y-4">
+                            <h2 className="text-2xl font-bold text-yellow-300 font-mono">
+                                SEND TO DOCTOR
+                            </h2>
+                            
+                            <div className="flex justify-center mb-8">
+                                <div className="w-48 h-42 md:h-62 overflow-hidden">
+                                    <Card 
+                                        cardData={selectedCard}
+                                        showBackDefault={false}
+                                        disableFlip={false}
+                                        forceShowFront={false}
+                                        scaleIfHover={false}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="text-cyan-300 font-mono space-y-3 px-2 mt-4">
+                                <p className="text-base">
+                                    Send Bead151 to doctor and receive{' '}
+                                    <span className="text-yellow-300 font-bold">
+                                        {getCandyReward(selectedCard.cardId)} candies
+                                    </span>
+                                </p>
+                                <p className="text-sm text-orange-300 leading-relaxed">
+                                    ⚠️ WARNING: If sent to doctor the Bead151 is burned forever and cannot be recovered.
+                                </p>
+                            </div>
+
+                            <div className="flex gap-4 pt-4">
+                                <Button
+                                    onClick={handleSendToDoctor}
+                                    className="flex-1 bg-red-600 hover:bg-red-700 border-4 border-red-400 text-white font-mono font-bold py-3"
+                                >
+                                    CONFIRM
+                                </Button>
+                                <Button
+                                    onClick={() => setShowDoctorModal(false)}
+                                    className="flex-1 bg-gray-600 hover:bg-gray-700 border-4 border-gray-400 text-white font-mono font-bold py-3"
+                                >
+                                    CANCEL
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Retro Styling */}
+            <style>{`
+                .pixelated {
+                    image-rendering: -moz-crisp-edges;
+                    image-rendering: -webkit-crisp-edges;
+                    image-rendering: pixelated;
+                    image-rendering: crisp-edges;
+                }
+                
+                @font-face {
+                    font-family: 'PokemonGB';
+                    src: url('/fonts/PokemonGb-RAeo.ttf') format('truetype');
+                }
+                
+                .font-mono {
+                    font-family: 'PokemonGB', monospace;
+                }
+                
+                /* Custom select styling for retro look */
+                select {
+                    background-image: none;
+                    appearance: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                }
+            `}</style>
         </div>
     )
 }
