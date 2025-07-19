@@ -52,6 +52,7 @@ export default function CollectionPage() {
     const [viewMode, setViewMode] = useState<ViewMode>('large-grid')
     const [hideDuplicates, setHideDuplicates] = useState<boolean>(false)
     const [showOnlyDuplicates, setShowOnlyDuplicates] = useState<boolean>(false)
+    const [useSideBySideLayout, setUseSideBySideLayout] = useState<boolean>(true)
 
     // Set responsive default view mode on component mount
     useEffect(() => {
@@ -303,15 +304,23 @@ export default function CollectionPage() {
     const uniqueCards = new Set(allCards.map(card => card.cardId)).size
 
     const getGridClasses = () => {
+        const isSideBySide = useSideBySideLayout && window.innerWidth >= 1024
+        
         switch (viewMode) {
             case 'large-grid':
-                return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4'
+                return isSideBySide 
+                    ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4'
+                    : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4'
             case 'small-grid':
-                return 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2'
+                return isSideBySide
+                    ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2'
+                    : 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2'
             case 'list':
                 return 'space-y-4'
             default:
-                return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4'
+                return isSideBySide 
+                    ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4'
+                    : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4'
         }
     }
 
@@ -385,9 +394,9 @@ export default function CollectionPage() {
 
                 {/* Combined Controls and Card Collection */}
                 {!isLoading && collectionCards.length > 0 && (
-                    <div className="flex flex-col lg:flex-row gap-8 lg:items-stretch">
+                    <div className={`flex flex-col gap-8 ${useSideBySideLayout ? 'lg:flex-row lg:items-stretch' : ''}`}>
                         {/* Selected Card Section - Always Visible */}
-                        <div className="lg:w-1/3 flex">
+                        <div className={`${useSideBySideLayout ? 'lg:w-1/3' : ''} flex`}>
                             <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 w-full">
                                 <h2 className="text-2xl font-bold text-yellow-300 mb-6 font-mono text-center">
                                     SELECTED CARD
@@ -462,7 +471,7 @@ export default function CollectionPage() {
                         </div>
 
                         {/* Card Collection */}
-                        <div className="lg:w-2/3 flex">
+                        <div className={`${useSideBySideLayout ? 'lg:w-2/3' : ''} flex`}>
                             <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 w-full">
                                 <h2 className="text-2xl font-bold text-yellow-300 mb-6 font-mono text-center">
                                     CARD COLLECTION
@@ -470,6 +479,26 @@ export default function CollectionPage() {
                         
                                 {/* Controls */}
                         <div className="flex flex-col gap-4 mb-8">
+                            {/* Layout Toggle - Only show on desktop */}
+                            <div className="hidden lg:flex justify-center mb-4">
+                                <div className="flex items-center space-x-2">
+                                    <label className="text-yellow-300 font-mono text-sm">LAYOUT:</label>
+                                    <Button
+                                        onClick={() => setUseSideBySideLayout(true)}
+                                        className={`${useSideBySideLayout ? 'bg-cyan-600 border-cyan-400' : 'bg-teal-700 border-gray-400'} text-yellow-300 font-mono border-2 text-xs px-3 py-1`}
+                                        size="sm"
+                                    >
+                                        SIDE BY SIDE
+                                    </Button>
+                                    <Button
+                                        onClick={() => setUseSideBySideLayout(false)}
+                                        className={`${!useSideBySideLayout ? 'bg-cyan-600 border-cyan-400' : 'bg-teal-700 border-gray-400'} text-yellow-300 font-mono border-2 text-xs px-3 py-1`}
+                                        size="sm"
+                                    >
+                                        STACKED
+                                    </Button>
+                                </div>
+                            </div>
                             {/* Search */}
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-yellow-300 h-4 w-4" />
