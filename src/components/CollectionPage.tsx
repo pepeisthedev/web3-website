@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react"
 import { ethers } from "ethers"
 import Card from "./Card"
-import { Loader2, Search, Grid, List, ChevronDown, Grid3X3, LayoutGrid, Heart, ArrowUp } from "lucide-react"
+import { Loader2, Search, Grid, List, ChevronDown, Grid3X3, LayoutGrid, Heart, ArrowUp, Columns, Rows } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Checkbox } from "./ui/checkbox"
@@ -473,32 +473,33 @@ export default function CollectionPage() {
                         {/* Card Collection */}
                         <div className={`${useSideBySideLayout ? 'lg:w-2/3' : ''} flex`}>
                             <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 w-full">
-                                <h2 className="text-2xl font-bold text-yellow-300 mb-6 font-mono text-center">
-                                    CARD COLLECTION
-                                </h2>
+                                <div className="flex justify-between items-center mb-6">
+                                    <div className="w-16"></div> {/* Spacer for balance */}
+                                    <h2 className="text-2xl font-bold text-yellow-300 font-mono text-center flex-1">
+                                        CARD COLLECTION
+                                    </h2>
+                                    
+                                    {/* Layout Toggle - Only show on desktop */}
+                                    <div className="hidden lg:flex items-center space-x-1 w-16 justify-end">
+                                        <button
+                                            onClick={() => setUseSideBySideLayout(true)}
+                                            className={`p-2 border-2 rounded ${useSideBySideLayout ? 'bg-cyan-600 border-cyan-400' : 'bg-teal-700 border-gray-400'} text-yellow-300 transition-colors`}
+                                            title="Side by Side Layout"
+                                        >
+                                            <Columns className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => setUseSideBySideLayout(false)}
+                                            className={`p-2 border-2 rounded ${!useSideBySideLayout ? 'bg-cyan-600 border-cyan-400' : 'bg-teal-700 border-gray-400'} text-yellow-300 transition-colors`}
+                                            title="Stacked Layout"
+                                        >
+                                            <Rows className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
                         
                                 {/* Controls */}
                         <div className="flex flex-col gap-4 mb-8">
-                            {/* Layout Toggle - Only show on desktop */}
-                            <div className="hidden lg:flex justify-center mb-4">
-                                <div className="flex items-center space-x-2">
-                                    <label className="text-yellow-300 font-mono text-sm">LAYOUT:</label>
-                                    <Button
-                                        onClick={() => setUseSideBySideLayout(true)}
-                                        className={`${useSideBySideLayout ? 'bg-cyan-600 border-cyan-400' : 'bg-teal-700 border-gray-400'} text-yellow-300 font-mono border-2 text-xs px-3 py-1`}
-                                        size="sm"
-                                    >
-                                        SIDE BY SIDE
-                                    </Button>
-                                    <Button
-                                        onClick={() => setUseSideBySideLayout(false)}
-                                        className={`${!useSideBySideLayout ? 'bg-cyan-600 border-cyan-400' : 'bg-teal-700 border-gray-400'} text-yellow-300 font-mono border-2 text-xs px-3 py-1`}
-                                        size="sm"
-                                    >
-                                        STACKED
-                                    </Button>
-                                </div>
-                            </div>
                             {/* Search */}
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-yellow-300 h-4 w-4" />
