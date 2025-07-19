@@ -65,43 +65,44 @@ export default function OpenPackTransactionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
+      <div className="absolute inset-0 bg-black/70" onClick={handleClose} />
 
-      <div className="relative bg-gradient-to-br from-slate-900 to-purple-900 rounded-2xl p-8 max-w-6xl w-full mx-4 border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 max-w-6xl w-full mx-4 shadow-2xl max-h-[90vh] overflow-y-auto font-mono">
         {modalState !== "waiting" && (
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10"
+            className="absolute top-2 right-2 text-yellow-300 hover:text-yellow-400 transition-colors z-10 bg-black border-2 border-gray-400 rounded p-1"
           >
-            <X className="h-6 w-6" />
+            <X className="h-4 w-4" />
           </button>
         )}
 
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
+          <h2 className="text-2xl font-bold text-yellow-300 mb-2 font-mono tracking-wider">{title}</h2>
         </div>
 
         {modalState === "init" && (
           <div className="text-center">
-            <img
-              src={initImage || "/placeholder.svg"}
-              alt="Transaction preview"
-              className="w-32 max-h-32 mx-auto mb-4 rounded-lg object-contain"
-            />
-            <p className="text-gray-300 mb-6 leading-relaxed">{initText}</p>
+            <div className="bg-black border-2 border-gray-400 rounded p-4 mb-4 mx-auto w-fit">
+              <img
+                src={initImage || "/placeholder.svg"}
+                alt="Transaction preview"
+                className="w-32 max-h-32 mx-auto rounded object-contain pixelated"
+              />
+            </div>
+            <p className="text-cyan-300 mb-6 leading-relaxed font-mono">{initText}</p>
             <div className="flex gap-3 justify-center max-w-sm mx-auto">
               <Button
                 onClick={handleClose}
-                variant="outline"
-                className="flex-1 border-gray-600 text-white hover:bg-gray-800 bg-transparent"
+                className="flex-1 bg-gray-600 border-2 border-gray-400 text-white hover:bg-gray-700 font-mono"
               >
-                Cancel
+                CANCEL
               </Button>
               <Button
                 onClick={handleConfirm}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                className="flex-1 bg-red-600 border-2 border-red-400 hover:bg-red-700 text-white font-mono"
               >
-                Confirm
+                CONFIRM
               </Button>
             </div>
           </div>
@@ -109,12 +110,12 @@ export default function OpenPackTransactionModal({
 
         {modalState === "waiting" && (
           <div className="text-center">
-            <div className="w-32 h-32 mx-auto mb-4 flex items-center justify-center">
-              <Loader2 className="h-16 w-16 text-blue-400 animate-spin" />
+            <div className="bg-black border-2 border-gray-400 rounded p-6 mb-4 mx-auto w-fit">
+              <Loader2 className="h-16 w-16 text-green-400 animate-spin" />
             </div>
-            <p className="text-blue-400 mb-4 text-lg font-medium animate-pulse">Waiting for transaction...</p>
-            <p className="text-gray-400 text-sm">
-              Please confirm the transaction in your wallet and wait for confirmation.
+            <p className="text-green-400 mb-4 text-lg font-bold animate-pulse font-mono">PROCESSING TRANSACTION...</p>
+            <p className="text-cyan-300 text-sm font-mono">
+              CONFIRM IN WALLET AND WAIT FOR BLOCKCHAIN CONFIRMATION
             </p>
           </div>
         )}
@@ -122,9 +123,9 @@ export default function OpenPackTransactionModal({
 
         {modalState === "completed" && (
           <div className="text-center">
-            <p className="text-gray-300 mb-6 leading-relaxed">{completedText}</p>
+            <p className="text-cyan-300 mb-6 leading-relaxed font-mono">{completedText}</p>
             <div className="mb-6">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 justify-items-center">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 justify-items-center">
                 {extractedCards.map((card, index) => (
                   <Card
                     key={index}
@@ -134,8 +135,11 @@ export default function OpenPackTransactionModal({
                 ))}
               </div>
             </div>
-            <Button onClick={handleClose} className="px-8 border-gray-600 bg-gray-600 hover:bg-gray-800 text-white">
-              Close
+            <Button 
+              onClick={handleClose} 
+              className="px-8 bg-gray-600 border-2 border-gray-400 hover:bg-gray-700 text-white font-mono"
+            >
+              CLOSE
             </Button>
           </div>
         )}
@@ -143,27 +147,45 @@ export default function OpenPackTransactionModal({
 
         {modalState === "error" && (
           <div className="text-center">
-            <div className="text-red-400 text-4xl mb-4">❌</div>
-            <p className="text-red-400 mb-2 font-medium">Transaction Failed</p>
-            <p className="text-gray-400 mb-6 text-sm">{errorMessage}</p>
-            <div className="flex gap-3">
+            <div className="bg-black border-2 border-red-400 rounded p-4 mb-4 mx-auto w-fit">
+              <div className="text-red-400 text-4xl font-mono">ERROR</div>
+            </div>
+            <p className="text-red-400 mb-2 font-bold font-mono">TRANSACTION FAILED</p>
+            <p className="text-cyan-300 mb-6 text-sm font-mono">{errorMessage}</p>
+            <div className="flex gap-3 justify-center max-w-sm mx-auto">
               <Button
                 onClick={handleClose}
-                variant="outline"
-                className="flex-1 border-gray-600 text-white hover:bg-gray-800 bg-transparent"
+                className="flex-1 bg-gray-600 border-2 border-gray-400 text-white hover:bg-gray-700 font-mono"
               >
-                Close
+                CLOSE
               </Button>
               <Button
                 onClick={() => setModalState("init")}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                className="flex-1 bg-red-600 border-2 border-red-400 hover:bg-red-700 text-white font-mono"
               >
-                Try Again
+                TRY AGAIN
               </Button>
             </div>
           </div>
         )}
       </div>
+
+      <style>{`
+        @font-face {
+            font-family: 'PokemonGB';
+            src: url('/fonts/PokemonGb-RAeo.ttf') format('truetype');
+        }
+        
+        .font-mono {
+            font-family: 'PokemonGB', monospace;
+        }
+
+        .pixelated {
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+      `}</style>
     </div>
   )
 }

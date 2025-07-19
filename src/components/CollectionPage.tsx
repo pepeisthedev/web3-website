@@ -309,8 +309,8 @@ export default function CollectionPage() {
         switch (viewMode) {
             case 'large-grid':
                 return isSideBySide 
-                    ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4'
-                    : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4'
+                    ? 'grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-4 2xl:grid-cols-5 gap-4'
+                    : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 gap-4'
             case 'small-grid':
                 return isSideBySide
                     ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2'

@@ -194,21 +194,21 @@ export default function Dex() {
     }
 
     return (
-        <div className="min-h-screen bg-black pt-20 px-4">
+        <div className="min-h-screen bg-gradient-to-b from-teal-900 via-cyan-800 to-teal-900 pt-4 md:pt-20 px-4 font-mono">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Bead151 DEX</h1>
-                    <p className="text-xl text-gray-300">Complete Card Database</p>
+                    <h1 className="text-4xl md:text-5xl font-bold text-yellow-300 mb-4 font-mono tracking-wider">BEAD151 DEX</h1>
+                    <p className="text-xl text-cyan-300 font-mono">COMPLETE CARD DATABASE</p>
                     
                     {isConnected && (
-                        <div className="mt-4 space-y-2">
-                            <div className="text-2xl font-bold text-white">
-                                {ownedCount}/151 ({completionPercentage}%)
+                        <div className="mt-6 bg-black border-4 border-yellow-300 rounded-lg p-4 max-w-md mx-auto">
+                            <div className="text-2xl font-bold text-green-400 mb-2 font-mono">
+                                {ownedCount.toString().padStart(3, '0')}/151 ({completionPercentage}%)
                             </div>
-                            <div className="w-full max-w-md mx-auto bg-gray-800 rounded-full h-4">
+                            <div className="w-full bg-gray-600 border-2 border-gray-400 rounded h-6 overflow-hidden">
                                 <div 
-                                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-4 rounded-full transition-all duration-500"
+                                    className="bg-green-400 h-full transition-all duration-500"
                                     style={{ width: `${completionPercentage}%` }}
                                 />
                             </div>
@@ -218,23 +218,23 @@ export default function Dex() {
 
                 {/* Controls */}
                 <div className="flex justify-center mb-8">
-                    <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-4">
+                    <div className="bg-black border-4 border-gray-400 rounded-lg p-4">
                         <div className="flex items-center gap-6">
                             <div className="flex items-center space-x-2">
                                 <Checkbox
                                     id="hideNotOwned"
                                     checked={hideNotOwned}
                                     onCheckedChange={(checked) => setHideNotOwned(checked as boolean)}
-                                    className="border-gray-600 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                                    className="border-2 border-gray-400 data-[state=checked]:bg-green-400 data-[state=checked]:border-green-400"
                                 />
-                                <label htmlFor="hideNotOwned" className="text-white cursor-pointer flex items-center gap-2">
+                                <label htmlFor="hideNotOwned" className="text-cyan-300 cursor-pointer flex items-center gap-2 font-mono text-sm">
                                     {hideNotOwned ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    Hide Not Owned
+                                    HIDE NOT OWNED
                                 </label>
                             </div>
                             
                             {!isConnected && (
-                                <p className="text-gray-400 text-sm">Connect wallet to see your collection</p>
+                                <p className="text-green-400 text-sm font-mono">CONNECT WALLET TO VIEW COLLECTION</p>
                             )}
                         </div>
                     </div>
@@ -243,8 +243,10 @@ export default function Dex() {
                 {/* Loading State */}
                 {isLoading && (
                     <div className="flex items-center justify-center py-12">
-                        <Loader2 className="h-8 w-8 text-blue-400 animate-spin mr-2" />
-                        <span className="text-white">Loading your collection...</span>
+                        <div className="bg-black border-2 border-gray-400 rounded p-4 flex items-center">
+                            <Loader2 className="h-6 w-6 text-green-400 animate-spin mr-3" />
+                            <span className="text-cyan-300 font-mono">LOADING COLLECTION...</span>
+                        </div>
                     </div>
                 )}
 
@@ -255,39 +257,38 @@ export default function Dex() {
                             key={entry.cardId}
                             onClick={() => handleCardClick(entry)}
                             className={`
-                                relative aspect-square rounded-lg overflow-hidden transition-all duration-300 hover:scale-105 cursor-pointer 
-                             
-                                ${entry.owned ? 'shadow-lg hover:shadow-blue-500/25' : ''}
+                                relative aspect-square rounded border-2 overflow-hidden transition-all duration-300 hover:scale-105 cursor-pointer 
+                                ${entry.owned 
+                                    ? 'bg-black border-yellow-300 shadow-lg hover:border-cyan-300' 
+                                    : 'bg-gray-600 border-gray-400'
+                                }
                             `}
                         >
                             {/* Card Number */}
                             <div className="absolute top-1 left-1 z-10">
-                                <span className={`text-xs font-bold px-1 py-0.5 rounded ${
-                                    entry.owned ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400'
+                                <span className={`text-xs font-bold px-1 py-0.5 border rounded font-mono ${
+                                    entry.owned 
+                                        ? 'bg-green-400 text-black border-green-400' 
+                                        : 'bg-gray-500 text-gray-300 border-gray-500'
                                 }`}>
                                     {entry.cardId.toString().padStart(3, '0')}
                                 </span>
                             </div>
 
                             {/* Card Image */}
-                            <div className="w-full h-full flex items-center justify-center p-1 ">
+                            <div className="w-full h-full flex items-center justify-center p-1">
                                 <img
                                     src={entry.imageUrl}
                                     alt={entry.cardName || `Card ${entry.cardId}`}
                                     className={`
-                                        max-w-full max-h-full object-contain transition-all duration-300 rounded-lg
+                                        max-w-full max-h-full object-contain transition-all duration-300 pixelated
                                         ${entry.owned ? '' : 'grayscale opacity-30'}
                                     `}
                                     onError={(e) => {
-                            
-                                        // Fallback if image doesn't exist
-                                      //  console.warn(`Image not found for card ${entry.cardId}: ${entry.imageUrl}`)
                                         (e.target as HTMLImageElement).src = '/placeholder.svg'
                                     }}
                                 />
                             </div>
-
-                     
                         </div>
                     ))}
                 </div>
@@ -295,9 +296,9 @@ export default function Dex() {
                 {/* Empty State */}
                 {hideNotOwned && filteredEntries.length === 0 && (
                     <div className="text-center py-12">
-                        <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-8">
-                            <p className="text-xl text-gray-300 mb-4">No cards owned yet</p>
-                            <p className="text-gray-400">Start collecting to build your DEX!</p>
+                        <div className="bg-black border-4 border-gray-400 rounded-lg p-8 max-w-md mx-auto">
+                            <p className="text-xl text-yellow-300 mb-4 font-mono">NO CARDS OWNED</p>
+                            <p className="text-cyan-300 font-mono text-sm">START COLLECTING TO BUILD YOUR DEX!</p>
                         </div>
                     </div>
                 )}
@@ -310,41 +311,29 @@ export default function Dex() {
                 <div 
                     className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
                     onClick={() => {
-                        // Close modal when clicking the backdrop
                         setSelectedCard(null)
                         setSelectedCardData(null)
                     }}
                 >
-                    <div 
-                        className="relative bg-transparent rounded-2xl p-6 max-w-lg w-full"
-                        onClick={(e) => {
-                            // Prevent modal from closing when clicking inside the card area
-                            e.stopPropagation()
-                        }}
-                    >
-                        {/* Card Component */}
-                        {selectedCardData ? (
-                            <div className="flex flex-col items-center space-y-6">
-                                {/* Responsive scale - larger on mobile */}
-                                <div className="transform scale-[2.5] sm:scale-[2] md:scale-150 mb-12 sm:mb-8">
-                                    <Card 
-                                        cardData={selectedCardData}
-                                        showBackDefault={false}
-                                        disableFlip={false}  // Enable flip when clicking the card
-                                        forceShowFront={false}
-                                        scaleIfHover={false}
-                                    />
-                                </div>
-                            
+                    {/* Card Component */}
+                    {selectedCardData ? (
+                        <div className="flex flex-col items-center space-y-6">
+                            <div className="transform scale-[2] sm:scale-[2] md:scale-150">
+                                <Card 
+                                    cardData={selectedCardData}
+                                    showBackDefault={false}
+                                    disableFlip={false}
+                                    forceShowFront={false}
+                                    scaleIfHover={false}
+                                />
                             </div>
-                        ) : (
-                            // Loading state while metadata loads
-                            <div className="flex flex-col items-center space-y-4">
-                                <Loader2 className="h-8 w-8 text-blue-400 animate-spin" />
-                                <p className="text-white">Loading card details...</p>
-                            </div>
-                        )}
-                    </div>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center space-y-4">
+                            <Loader2 className="h-8 w-8 text-green-400 animate-spin" />
+                            <p className="text-cyan-300 font-mono">LOADING CARD DATA...</p>
+                        </div>
+                    )}
                 </div>
             )}
             
@@ -355,6 +344,21 @@ export default function Dex() {
                     .xl\\:grid-cols-15 {
                         grid-template-columns: repeat(15, minmax(0, 1fr));
                     }
+                }
+
+                @font-face {
+                    font-family: 'PokemonGB';
+                    src: url('/fonts/PokemonGb-RAeo.ttf') format('truetype');
+                }
+                
+                .font-mono {
+                    font-family: 'PokemonGB', monospace;
+                }
+
+                .pixelated {
+                    image-rendering: pixelated;
+                    image-rendering: -moz-crisp-edges;
+                    image-rendering: crisp-edges;
                 }
             `}</style>
         </div>

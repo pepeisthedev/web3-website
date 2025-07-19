@@ -139,163 +139,104 @@ export default function OpenPackPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-20 px-4 relative overflow-hidden">
-            {/* Animated Background Elements */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
-                <div
-                    className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"
-                    style={{ animationDelay: "1s" }}
-                />
-                <div
-                    className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl animate-pulse"
-                    style={{ animationDelay: "2s" }}
-                />
-            </div>
-
-            {/* Floating Particles */}
-            <div className="absolute inset-0 pointer-events-none">
-                {[...Array(20)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="absolute animate-float"
-                        style={{
-                            left: `${Math.random() * 100}%`,
-                            top: `${Math.random() * 100}%`,
-                            animationDelay: `${Math.random() * 3}s`,
-                            animationDuration: `${3 + Math.random() * 2}s`,
-                        }}
-                    >
-                        <Star className="w-4 h-4 text-yellow-400/30" />
-                    </div>
-                ))}
-            </div>
-
-            <div className="max-w-4xl mx-auto relative z-10">
+        <div className="min-h-screen bg-gradient-to-b from-teal-900 via-cyan-800 to-teal-900 pt-4 md:pt-20 px-4">
+            <div className="max-w-6xl mx-auto">
                 {/* Header */}
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 animate-pulse">✨ Pack Opening Chamber ✨</h1>
-                    <p className="text-xl text-gray-300">Discover legendary cards hidden within Bead151 packs</p>
+                <div className="text-center mb-8">
+                    <h1 className="text-4xl md:text-5xl font-bold text-yellow-300 mb-4 font-mono tracking-wider">
+                        BEAD151 PACK OPENER
+                    </h1>
+                    <p className="text-xl text-cyan-300 font-mono">Open Packs to Collect Cards</p>
                 </div>
 
                 {/* Main Content */}
-                <div className="grid md:grid-cols-2 gap-8 items-center">
-                    {/* Pack Display */}
-                    <div className="text-center">
-                        <div className="relative inline-block">
-                            {/* Pack Image Container */}
-                            <div
-                                className={`relative transition-all duration-500 ${isHovering ? "scale-110" : "scale-100"}`}
-                                onMouseEnter={() => setIsHovering(true)}
-                                onMouseLeave={() => setIsHovering(false)}
-                            >
-                                {/* Glow Effects */}
+                <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 mb-8">
+                    <div className="grid md:grid-cols-2 gap-8 items-center">
+                        {/* Pack Display */}
+                        <div className="text-center">
+                            <div className="relative inline-block">
+                                {/* Pack Image Container */}
                                 <div
-                                    className={`absolute inset-0 rounded-2xl transition-all duration-1000 ${packGlow ? "bg-gradient-to-r from-yellow-400/30 to-orange-500/30 blur-xl scale-110" : "bg-gradient-to-r from-blue-400/20 to-purple-500/20 blur-lg scale-105"}`}
-                                />
-
-                                {/* Pack Image */}
-                                <div className="relative bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 p-8 rounded-2xl border-4 border-yellow-400/50 shadow-2xl">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-2xl" />
-
-                                    {/* Pack Art */}
-                                    <div className="relative z-10">
-                                        <div className="w-48 h-64 mx-auto bg-gradient-to-br from-yellow-200 to-orange-300 rounded-xl border-2 border-yellow-500 flex items-center justify-center shadow-inner overflow-hidden">
+                                    className={`relative transition-all duration-300 ${isHovering ? "scale-105" : "scale-100"}`}
+                                    onMouseEnter={() => setIsHovering(true)}
+                                    onMouseLeave={() => setIsHovering(false)}
+                                >
+                                    {/* Pack Image */}
+                                    <div className="relative bg-gray-600 border-4 border-gray-400 rounded-lg p-4 shadow-lg">
+                                        <div className="w-48 h-64 mx-auto bg-black border-2 border-gray-400 rounded flex items-center justify-center overflow-hidden">
                                             <img
                                                 src="/images/pack.png"
                                                 alt="Bead151 Pack"
-                                                className="w-full h-full object-cover"
+                                                className="w-full h-full object-cover pixelated"
                                             />
                                         </div>
                                     </div>
-
-                                    {/* Sparkle Effects */}
-                                    {isHovering && (
-                                        <div className="absolute inset-0 pointer-events-none">
-                                            {[...Array(8)].map((_, i) => (
-                                                <div
-                                                    key={i}
-                                                    className="absolute animate-ping"
-                                                    style={{
-                                                        left: `${20 + Math.random() * 60}%`,
-                                                        top: `${20 + Math.random() * 60}%`,
-                                                        animationDelay: `${Math.random() * 2}s`,
-                                                    }}
-                                                >
-                                                    <Sparkles className="w-6 h-6 text-yellow-300" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
                                 </div>
-                            </div>
 
-                            {/* Pack Count Badge */}
-                            <div className="absolute -top-4 -right-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full w-16 h-16 flex items-center justify-center border-4 border-white shadow-lg animate-bounce">
-                                <div className="text-center">
-                                    <div className="text-2xl font-bold">{packCount}</div>
-                                    <div className="text-xs">PACKS</div>
+                                {/* Pack Count Badge */}
+                                <div className="absolute -top-2 -right-2 bg-black border-2 border-yellow-300 text-green-400 rounded w-18 h-18 flex items-center justify-center font-mono">
+                                    <div className="text-center">
+                                        <div className="text-lg font-bold">{packCount.toString().padStart(2, '0')}</div>
+                                        <div className="text-xs">PACKS</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Controls */}
-                    <div className="space-y-8">
-                        {/* Pack Info */}
-                        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6">
-
-                            <div className="space-y-3 text-gray-300">
-                                <div className="font-bold flex justify-between">
-                                    <span>Available Packs:</span>
-                                    <span className="font-bold text-yellow-400 ">{packCount}</span>
+                        {/* Controls */}
+                        <div className="space-y-6">
+                            {/* Pack Info */}
+                            <div className="bg-black border-2 border-gray-400 rounded p-4">
+                                <div className="space-y-3 text-green-400 font-mono">
+                                    <div className="flex justify-between text-sm">
+                                        <span>AVAILABLE PACKS:</span>
+                                        <span className="text-yellow-300">{packCount.toString().padStart(3, '0')}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span>CARDS PER PACK:</span>
+                                        <span className="text-yellow-300">005</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span>PACK TYPE:</span>
+                                        <span className="text-yellow-300">RANDOM</span>
+                                    </div>
                                 </div>
-                                <div className="font-bold flex justify-between">
-                                    <span>Cards per Pack:</span>
-                                    <span className="font-bold text-yellow-400 mb-5">5 Random Cards</span>
-                                </div>
-
                             </div>
+
+                            {/* Open Pack Button */}
                             <div className="text-center">
                                 <Button
                                     onClick={handleOpenPack}
                                     disabled={!isConnected || packCount === 0}
                                     className={`
-                  relative w-full py-4 text-lg font-bold rounded-2xl transition-all duration-300
-                  ${packCount > 0 && isConnected
-                                            ? "bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 hover:from-yellow-400 hover:via-orange-400 hover:to-red-400 text-white shadow-2xl hover:shadow-yellow-500/25 hover:scale-105 animate-pulse"
-                                            : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                                        w-full py-4 text-lg font-bold font-mono border-4 rounded transition-all duration-300
+                                        ${packCount > 0 && isConnected
+                                            ? 'bg-red-600 hover:bg-red-700 border-red-400 text-white'
+                                            : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
                                         }
-                `}
+                                    `}
                                 >
                                     {!isConnected ? (
-                                        "🔗 Connect Wallet"
+                                        "CONNECT WALLET"
                                     ) : packCount === 0 ? (
-                                        "📦 No Packs Available"
+                                        "NO PACKS AVAILABLE"
                                     ) : (
-                                        <span className="flex items-center justify-center">
-                                            <Sparkles className="w-4 h-4 mr-2 animate-spin" />OPEN Bead151 PACK
-                                            <Sparkles className="w-4 h-4 ml-2 animate-spin" />
-                                        </span>
+                                        "OPEN PACK"
                                     )}
                                 </Button>
-
                             </div>
-                        </div>
 
-                        {/* Open Pack Button */}
-
-
-                        {/* Pack Opening Tips */}
-                        <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 backdrop-blur-sm border border-purple-500/30 rounded-2xl p-6 mb-4">
-                            <h4 className="text-lg font-bold text-white mb-3 flex items-center">
-                                <Star className="w-5 h-5 mr-2 text-yellow-400" />
-                                Pack Information
-                            </h4>
-                            <div className="space-y-2 text-sm text-gray-300 text-left">
-                                <p>🌟 Each pack contains 5 random cards</p>
-                                <p>⚡ Gas fees required for blockchain transaction</p>
-                                <p>🎯 Cards are randomly generated on-chain</p>
+                            {/* Pack Opening Info */}
+                            <div className="bg-black border-2 border-gray-400 rounded p-4">
+                                <h4 className="text-yellow-300 font-mono font-bold text-sm mb-3 text-center">
+                                    PACK INFORMATION
+                                </h4>
+                                <div className="space-y-2 text-xs text-green-400 font-mono text-left">
+                                    <p className="pl-3 -indent-3">* EACH PACK CONTAINS 5 CARDS</p>
+                                    <p className="pl-3 -indent-3">* CARDS ARE RANDOMLY GENERATED</p>
+                                    <p className="pl-3 -indent-3">* TRANSACTION FEE REQUIRED</p>
+                                    <p className="pl-3 -indent-3">* CARDS ADDED TO COLLECTION</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -322,6 +263,15 @@ export default function OpenPackPage() {
         
         .animate-float {
           animation: float 6s ease-in-out infinite;
+        }
+
+        @font-face {
+            font-family: 'PokemonGB';
+            src: url('/fonts/PokemonGb-RAeo.ttf') format('truetype');
+        }
+        
+        .font-mono {
+            font-family: 'PokemonGB', monospace;
         }
       `}</style>
         </div>
