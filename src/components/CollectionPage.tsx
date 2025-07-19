@@ -305,13 +305,13 @@ export default function CollectionPage() {
     const getGridClasses = () => {
         switch (viewMode) {
             case 'large-grid':
-                return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4'
+                return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4'
             case 'small-grid':
-                return 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2'
+                return 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-2'
             case 'list':
                 return 'space-y-4'
             default:
-                return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4'
+                return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4'
         }
     }
 
@@ -365,79 +365,6 @@ export default function CollectionPage() {
                     </div>
                 </div>
 
-                {/* Selected Card Section - Always Visible */}
-                <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 mb-8">
-                    <h2 className="text-2xl font-bold text-yellow-300 mb-6 font-mono text-center">
-                        SELECTED CARD
-                    </h2>
-                    <div className="flex flex-col items-center gap-2 md:gap-6">
-                        {/* Card Display */}
-                        <div className="flex-shrink-0">
-                            <div className="w-48 h-46 md:h-64">
-                                {selectedCard ? (
-                                    <Card 
-                                        cardData={selectedCard}
-                                        showBackDefault={false}
-                                        disableFlip={true}
-                                        forceShowFront={true}
-                                        scaleIfHover={false}
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-gray-600 border-2 border-gray-400 rounded-lg flex flex-col items-center justify-center">
-                                        <div className="text-gray-400 font-mono text-center">
-                                            <div className="text-lg mb-2">📋</div>
-                                            <div className="text-sm">SELECT A CARD</div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        
-                        {/* Card Info */}
-                        <div className="text-center text-cyan-300 font-mono">
-                            <h3 className="text-xl font-bold mb-2">
-                                {selectedCard ? (() => {
-                                    try {
-                                        const traits = JSON.parse(selectedCard.description)
-                                        const cardTrait = traits.find((trait: any) => trait.trait_type === "Card")
-                                        return cardTrait ? cardTrait.value : `Card #${selectedCard.cardId}`
-                                    } catch {
-                                        return `Card #${selectedCard.cardId}`
-                                    }
-                                })() : "No Card Selected"}
-                            </h3>
-                            {!selectedCard && (
-                                <p className="text-sm mb-4">
-                                    Click on a card below to select it
-                                </p>
-                            )}
-                        </div>
-                        
-                        {/* Card Actions */}
-                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full max-w-md px-2 sm:px-0">
-                            <Button
-                                onClick={() => selectedCard && setShowDoctorModal(true)}
-                                disabled={!selectedCard}
-                                className={`flex-1 border-4 font-mono font-bold py-2 sm:py-3 text-sm sm:text-base ${
-                                    selectedCard 
-                                        ? 'bg-red-600 hover:bg-red-700 border-red-400 text-white'
-                                        : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
-                                }`}
-                            >
-                                <Heart className="w-4 h-4 mr-2" />
-                                SEND TO DOCTOR
-                            </Button>
-                            <Button
-                                disabled
-                                className="flex-1 bg-gray-600 border-4 border-gray-400 text-gray-300 font-mono font-bold py-2 sm:py-3 text-sm sm:text-base cursor-not-allowed"
-                            >
-                                <ArrowUp className="w-4 h-4 mr-2" />
-                                UPGRADE
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-
                 {/* Loading State */}
                 {isLoading && (
                     <div className="text-center py-8">
@@ -458,12 +385,90 @@ export default function CollectionPage() {
 
                 {/* Combined Controls and Card Collection */}
                 {!isLoading && collectionCards.length > 0 && (
-                    <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6">
-                        <h2 className="text-2xl font-bold text-yellow-300 mb-6 font-mono text-center">
-                            CARD COLLECTION
-                        </h2>
+                    <div className="flex flex-col lg:flex-row gap-8 lg:items-stretch">
+                        {/* Selected Card Section - Always Visible */}
+                        <div className="lg:w-1/3 flex">
+                            <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 w-full">
+                                <h2 className="text-2xl font-bold text-yellow-300 mb-6 font-mono text-center">
+                                    SELECTED CARD
+                                </h2>
+                                <div className="flex flex-col items-center gap-2 md:gap-6">
+                                    {/* Card Display */}
+                                    <div className="flex-shrink-0">
+                                        <div className="w-48 h-46 md:h-64">
+                                            {selectedCard ? (
+                                                <Card 
+                                                    cardData={selectedCard}
+                                                    showBackDefault={false}
+                                                    disableFlip={false}
+                                                    forceShowFront={false}
+                                                    scaleIfHover={false}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full bg-gray-600 border-2 border-gray-400 rounded-lg flex flex-col items-center justify-center">
+                                                    <div className="text-gray-400 font-mono text-center">
+                                                        <div className="text-lg mb-2">📋</div>
+                                                        <div className="text-sm">SELECT A CARD</div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Card Info */}
+                                    <div className="text-center text-cyan-300 font-mono">
+                                        <h3 className="text-xl font-bold mb-2">
+                                            {selectedCard ? (() => {
+                                                try {
+                                                    const traits = JSON.parse(selectedCard.description)
+                                                    const cardTrait = traits.find((trait: any) => trait.trait_type === "Card")
+                                                    return cardTrait ? cardTrait.value : `Card #${selectedCard.cardId}`
+                                                } catch {
+                                                    return `Card #${selectedCard.cardId}`
+                                                }
+                                            })() : "No Card Selected"}
+                                        </h3>
+                                        {!selectedCard && (
+                                            <p className="text-sm mb-4">
+                                                Click on a card below to select it
+                                            </p>
+                                        )}
+                                    </div>
+                                    
+                                    {/* Card Actions */}
+                                    <div className="flex flex-row sm:flex-row gap-2 sm:gap-4 w-full px-2 sm:px-0">
+                                        <Button
+                                            onClick={() => selectedCard && setShowDoctorModal(true)}
+                                            disabled={!selectedCard}
+                                            className={`flex-1 border-4 font-mono font-bold py-2 sm:py-3 text-xs sm:text-sm lg:text-xs xl:text-sm ${
+                                                selectedCard 
+                                                    ? 'bg-red-600 hover:bg-red-700 border-red-400 text-white'
+                                                    : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
+                                            }`}
+                                        >
+                                            <Heart className="w-4 h-4 mr-1 sm:mr-2" />
+                                            SEND
+                                        </Button>
+                                        <Button
+                                            disabled
+                                            className="flex-1 bg-gray-600 border-4 border-gray-400 text-gray-300 font-mono font-bold py-2 sm:py-3 text-xs sm:text-sm lg:text-xs xl:text-sm cursor-not-allowed"
+                                        >
+                                            <ArrowUp className="w-4 h-4 mr-1 sm:mr-2" />
+                                            UPGRADE
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Card Collection */}
+                        <div className="lg:w-2/3 flex">
+                            <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 w-full">
+                                <h2 className="text-2xl font-bold text-yellow-300 mb-6 font-mono text-center">
+                                    CARD COLLECTION
+                                </h2>
                         
-                        {/* Controls */}
+                                {/* Controls */}
                         <div className="flex flex-col gap-4 mb-8">
                             {/* Search */}
                             <div className="relative">
@@ -535,36 +540,32 @@ export default function CollectionPage() {
 
                         {/* Card Grid */}
                         {filteredAndSortedCards.length > 0 ? (
-                            <div className={getGridClasses()}>
-                                {filteredAndSortedCards.map((card, index) => (
-                                    <div 
-                                        key={`${card.cardId}-${card.tokenId}-${index}`} 
-                                        className={`
-                                            relative cursor-pointer transition-all duration-300 p-2 rounded-lg border-2
-                                            ${selectedCard?.tokenId === card.tokenId 
-                                                ? 'border-yellow-300 bg-yellow-900/30' 
-                                                : 'border-transparent hover:border-cyan-400'
-                                            }
-                                        `}
-                                        onClick={() => handleCardClick(card)}
-                                    >
-                                        <Card 
-                                            cardData={card} 
-                                            showBackDefault={false} 
-                                            disableFlip={true}
-                                            forceShowFront={true}
-                                            scaleIfHover={false}
-                                        />
-                                        
-                                        {/* Card count badge */}
-                                        {card.count > 1 && (
-                                            <div className="absolute -top-2 -right-2 bg-yellow-300 text-black rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold font-mono">
-                                                {card.count}
-                                            </div>
-                                        )}
-                          
-                                    </div>
-                                ))}
+                            <div className="max-h-72 overflow-y-auto">
+                                <div className={getGridClasses()}>
+                                    {filteredAndSortedCards.map((card, index) => (
+                                        <div 
+                                            key={`${card.cardId}-${card.tokenId}-${index}`} 
+                                            className={`
+                                                relative cursor-pointer transition-all duration-300 p-2 rounded-lg border-2
+                                                ${selectedCard?.tokenId === card.tokenId 
+                                                    ? 'border-yellow-300 bg-yellow-900/30' 
+                                                    : 'border-transparent hover:border-cyan-400'
+                                                }
+                                            `}
+                                            onClick={() => handleCardClick(card)}
+                                        >
+                                            <Card 
+                                                cardData={card} 
+                                                showBackDefault={false} 
+                                                disableFlip={true}
+                                                forceShowFront={true}
+                                                scaleIfHover={false}
+                                            />
+                                  
+                                  
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         ) : (
                             /* Search Results - No matches */
@@ -575,9 +576,10 @@ export default function CollectionPage() {
                                 </div>
                             )
                         )}
+                            </div>
+                        </div>
                     </div>
                 )}
-            </div>
 
             {/* Doctor Modal */}
             {showDoctorModal && selectedCard && (
@@ -657,6 +659,7 @@ export default function CollectionPage() {
                     -moz-appearance: none;
                 }
             `}</style>
+            </div>
         </div>
     )
 }
