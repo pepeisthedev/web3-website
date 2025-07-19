@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Button } from "./ui/button"
-import { ArrowRight, Play, Star, Zap, Brush  } from "lucide-react"
+import { ArrowRight, Play, Star, Zap, Brush } from "lucide-react"
 import { SectionType } from "./types/SectionTypes"
 
 interface LandingPageProps {
@@ -47,22 +47,26 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
         const animate = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-            // Create pixelated effect around mouse
+            // Create pixelated effect around mouse with retro colors
             const gradient = ctx.createRadialGradient(mousePos.x, mousePos.y, 0, mousePos.x, mousePos.y, radius)
 
-            gradient.addColorStop(0, "rgba(59, 130, 246, 0.3)")
-            gradient.addColorStop(0.5, "rgba(147, 51, 234, 0.2)")
+            gradient.addColorStop(0, "rgba(251, 191, 36, 0.4)") // yellow-400
+            gradient.addColorStop(0.5, "rgba(34, 197, 94, 0.3)") // green-500  
             gradient.addColorStop(1, "rgba(0, 0, 0, 0)")
 
             ctx.fillStyle = gradient
 
-            // Draw pixelated circles
+            // Draw pixelated circles with retro GameBoy colors
             for (let x = mousePos.x - radius; x < mousePos.x + radius; x += pixelSize) {
                 for (let y = mousePos.y - radius; y < mousePos.y + radius; y += pixelSize) {
                     const distance = Math.sqrt((x - mousePos.x) ** 2 + (y - mousePos.y) ** 2)
                     if (distance < radius) {
-                        const alpha = (1 - distance / radius) * 0.4
-                        ctx.fillStyle = `rgba(59, 130, 246, ${alpha})`
+                        const alpha = (1 - distance / radius) * 0.5
+                        // Alternate between yellow and green for retro effect
+                        const color = Math.floor((x + y) / pixelSize) % 2 === 0
+                            ? `rgba(251, 191, 36, ${alpha})` // yellow-400
+                            : `rgba(34, 197, 94, ${alpha})`  // green-500
+                        ctx.fillStyle = color
                         ctx.fillRect(x, y, pixelSize, pixelSize)
                     }
                 }
@@ -113,138 +117,159 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
     ]
 
     return (
-        <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
+        <div className="relative min-h-screen bg-gradient-to-b from-teal-900 via-cyan-800 to-teal-900 overflow-hidden font-mono">
             {/* Pixelated mouse effect canvas */}
             <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-10" style={{ mixBlendMode: "screen" }} />
 
-            {/* Animated background */}
-            <div className="fixed inset-0 opacity-20">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 animate-pulse" />
-                <div
-                    className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-bounce"
-                    style={{ animationDuration: "6s" }}
-                />
-                <div
-                    className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-bounce"
-                    style={{ animationDuration: "8s", animationDelay: "2s" }}
-                />
+            {/* Retro grid pattern background */}
+            <div className="fixed inset-0 opacity-10">
+                <div className="absolute inset-0" style={{
+                    backgroundImage: `
+                        linear-gradient(rgba(34, 197, 94, 0.3) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(34, 197, 94, 0.3) 1px, transparent 1px)
+                    `,
+                    backgroundSize: '20px 20px'
+                }} />
             </div>
 
             {/* Hero Section */}
             <section
                 id="hero"
-                className={`relative z-20 min-h-screen flex items-center justify-center px-4 transition-all duration-1000 ${isVisible.hero ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+                className={`relative z-20 min-h-screen flex items-center justify-center px-4 pt-20 md:pt-40 transition-all duration-1000 ${isVisible.hero ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
                     }`}
             >
                 <div className="max-w-4xl mx-auto text-center">
-                
-
-                    <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-                        Beads 151
-                      
+                    <h1 className="text-5xl md:text-7xl font-bold text-yellow-300 mb-6 leading-tight font-mono tracking-wider">
+                        BEADS 151
                     </h1>
 
                     <section
-                id="gallery"
-                className={`relative z-20  transition-all duration-1000 delay-300 ${isVisible.gallery ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-                    }`}
-            >
-          
-                <div className="relative overflow-hidden">
-                    <div className="flex animate-scroll-left">
-                        {[...images, ...images, ...images].map((src, index) => (
-                            <div key={index} className="flex-shrink-0 mx-4">
-                                <div className="relative group">
-                                    <img
-                                        src={src || "/placeholder.svg"}
-                                        alt={`Gallery image ${index + 1}`}
-                                        width={200}
-                                        height={200}
-                                        className="rounded-lg shadow-2xl transition-transform duration-300 group-hover:scale-105"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                </div>
+                        id="gallery"
+                        className={`relative z-20 mb-8 transition-all duration-1000 delay-300 ${isVisible.gallery ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+                            }`}
+                    >
+                        <div className="relative overflow-hidden bg-black border-4 border-yellow-300 p-4 mb-8">
+                            <div className="flex animate-scroll-left">
+                                {[...images, ...images, ...images].map((src, index) => (
+                                    <div key={index} className="flex-shrink-0 mx-2">
+                                        <div className="relative group">
+                                            <div className="bg-gray-600 border-2 border-gray-400 p-2">
+                                                <img
+                                                    src={src || "/placeholder.svg"}
+                                                    alt={`Gallery image ${index + 1}`}
+                                                    width={120}
+                                                    height={120}
+                                                    className="pixelated transition-transform duration-300 group-hover:scale-105"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                        <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg mb-8 mt-8" onClick={() => setCurrentView("mint")}>
-                            Mint <ArrowRight className="ml-2 h-5 w-5" />
+                        </div>
+                    </section>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <Button size="lg" className="bg-red-600 hover:bg-red-700 border-4 border-red-400 text-white px-8 py-4 text-lg mb-8 mt-8 font-mono font-bold" onClick={() => setCurrentView("mint")}>
+                            MINT <ArrowRight className="ml-2 h-5 w-5" />
                         </Button>
-                      
                     </div>
 
-                    <p className="text-lg md:text-lg text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-                       Bead151 is a dynamic on-chain NFT experience. Mint unique collectible cards, each with their own rarity and traits. Burn your NFTs to earn candy, evolve your collection, and unlock rare combinations. All the art, and every action — from minting to evolving — is powered by verified smart contracts and stored directly on the blockchain. No off-chain hacks, just pure on-chain play.
-                    </p>
+                    <div className="bg-teal-800 border-4 border-yellow-300 p-6 mb-8">
+                        <div className="max-w-2xl mx-auto font-mono space-y-4">
+                            <p className="text-lg text-cyan-300 leading-relaxed">
+                                BEAD151 IS A DYNAMIC ON-CHAIN NFT EXPERIENCE.
+                            </p>
+                            <p className="text-base text-cyan-300 leading-relaxed">
+                                MINT UNIQUE COLLECTIBLE CARDS, EACH WITH THEIR OWN RARITY AND TRAITS. BURN YOUR NFTS TO EARN CANDY, EVOLVE YOUR COLLECTION, AND UNLOCK RARE COMBINATIONS.
+                            </p>
+                            <p className="text-base text-green-400 leading-relaxed">
+                                ALL THE ART, AND EVERY ACTION — FROM MINTING TO EVOLVING — IS POWERED BY VERIFIED SMART CONTRACTS AND STORED DIRECTLY ON THE BLOCKCHAIN.
+                            </p>
+                            <p className="text-base text-yellow-300 font-bold leading-relaxed">
+                                NO OFF-CHAIN HACKS, JUST PURE ON-CHAIN PLAY.
+                            </p>
+                        </div>
+                    </div>
 
-              
+
                 </div>
             </section>
 
-            
+
 
             {/* Features Section */}
             <section
                 id="features"
-                className={`relative z-20 mb-8 px-4 transition-all duration-1000 delay-500 ${isVisible.features ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+                className={`relative pt-10 z-20 mb-8 px-4 transition-all duration-1000 delay-500 ${isVisible.features ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
                     }`}
             >
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">About the project</h2>
-                     
+                        <h2 className="text-4xl md:text-5xl font-bold text-yellow-300 mb-6 font-mono tracking-wider">ABOUT THE PROJECT</h2>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8">
                         {[
                             {
                                 icon: <Zap className="h-8 w-8" />,
-                                title: "On-Chain",
-                                description: "Everything is on-chain, all the art and all the actions. We use X number of smart contracts to make this possible",
+                                title: "ON-CHAIN",
+                                description: "EVERYTHING IS ON-CHAIN, ALL THE ART AND ALL THE ACTIONS. WE USE X NUMBER OF SMART CONTRACTS TO MAKE THIS POSSIBLE",
                             },
                             {
                                 icon: <Brush className="h-8 w-8" />,
-                                title: "Hand made art",
-                                description: "All 151 cards are hand drawn and pixelated by our artist, no use of AI",
+                                title: "HAND MADE ART",
+                                description: "ALL 151 CARDS ARE HAND DRAWN AND PIXELATED BY OUR ARTIST, NO USE OF AI",
                             },
                             {
                                 icon: <Star className="h-8 w-8" />,
-                                title: "Awesome experience",
-                                description: "Join us in an unique experience, only on Base",
+                                title: "AWESOME EXPERIENCE",
+                                description: "JOIN US IN AN UNIQUE EXPERIENCE, ONLY ON BASE",
                             },
                         ].map((feature, index) => (
                             <div
                                 key={index}
-                                className="group p-8 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105"
+                                className="group p-6 bg-teal-800 border-4 border-yellow-300 hover:border-green-400 transition-all duration-300 hover:scale-105"
                             >
-                                <div className="text-blue-400 mb-4 group-hover:text-blue-300 transition-colors">{feature.icon}</div>
-                                <h3 className="text-xl font-semibold text-white mb-3">{feature.title}</h3>
-                                <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+                                <div className="text-green-400 mb-4 group-hover:text-cyan-300 transition-colors">{feature.icon}</div>
+                                <h3 className="text-xl font-bold text-yellow-300 mb-3 font-mono">{feature.title}</h3>
+                                <p className="text-cyan-300 leading-relaxed font-mono text-sm">{feature.description}</p>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-           
+
 
             <style>{`
-        @keyframes scroll-left {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-33.333%);
-          }
-        }
-        
-        .animate-scroll-left {
-          animation: scroll-left 30s linear infinite;
-        }
-      `}</style>
+                @font-face {
+                    font-family: 'PokemonGB';
+                    src: url('/fonts/PokemonGb-RAeo.ttf') format('truetype');
+                }
+                
+                .font-mono {
+                    font-family: 'PokemonGB', monospace;
+                }
+
+                .pixelated {
+                    image-rendering: pixelated;
+                    image-rendering: -moz-crisp-edges;
+                    image-rendering: crisp-edges;
+                }
+
+                @keyframes scroll-left {
+                  0% {
+                    transform: translateX(0);
+                  }
+                  100% {
+                    transform: translateX(-33.333%);
+                  }
+                }
+                
+                .animate-scroll-left {
+                  animation: scroll-left 30s linear infinite;
+                }
+            `}</style>
         </div>
     )
 }
