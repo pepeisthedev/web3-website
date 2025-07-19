@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Button } from "./ui/button"
-import { ArrowRight, Play, Star, Users, Zap } from "lucide-react"
+import { ArrowRight, Play, Star, Zap, Brush  } from "lucide-react"
 import { SectionType } from "./types/SectionTypes"
 
 interface LandingPageProps {
@@ -137,53 +137,19 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
                     }`}
             >
                 <div className="max-w-4xl mx-auto text-center">
-                    <div className="mb-6">
-                        <span className="inline-block px-4 py-2 bg-blue-500/20 text-blue-300 rounded-full text-sm font-medium backdrop-blur-sm border border-blue-500/30">
-                            ✨ Welcome to the Future
-                        </span>
-                    </div>
+                
 
                     <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
                         Beads 151
-                        <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                            {" "}
-                            Next Level
-                        </span>
+                      
                     </h1>
 
-                    <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-                        Discover a revolutionary platform that transforms the way you interact with technology. Built for creators,
-                        designed for the future.
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                        <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg" onClick={() => setCurrentView("mint")}>
-                            Mint <ArrowRight className="ml-2 h-5 w-5" />
-                        </Button>
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            className="border-gray-600 text-white hover:bg-gray-800 px-8 text-lg bg-transparent"
-                        >
-                            <Play className="mr-2 h-5 w-5" /> Watch Demo
-                        </Button>
-                    </div>
-                </div>
-            </section>
-
-            {/* Infinite Rolling Images */}
-            <section
+                    <section
                 id="gallery"
                 className={`relative z-20  transition-all duration-1000 delay-300 ${isVisible.gallery ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
                     }`}
             >
-                <div className="mb-12 text-center">
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Powered by Innovation</h2>
-                    <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                        See what's possible when cutting-edge technology meets creative vision
-                    </p>
-                </div>
-
+          
                 <div className="relative overflow-hidden">
                     <div className="flex animate-scroll-left">
                         {[...images, ...images, ...images].map((src, index) => (
@@ -192,8 +158,8 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
                                     <img
                                         src={src || "/placeholder.svg"}
                                         alt={`Gallery image ${index + 1}`}
-                                        width={400}
-                                        height={300}
+                                        width={200}
+                                        height={200}
                                         className="rounded-lg shadow-2xl transition-transform duration-300 group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -203,38 +169,51 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
                     </div>
                 </div>
             </section>
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg mb-8 mt-8" onClick={() => setCurrentView("mint")}>
+                            Mint <ArrowRight className="ml-2 h-5 w-5" />
+                        </Button>
+                      
+                    </div>
 
+                    <p className="text-lg md:text-lg text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+                       Bead151 is a dynamic on-chain NFT experience. Mint unique collectible cards, each with their own rarity and traits. Burn your NFTs to earn candy, evolve your collection, and unlock rare combinations. All the art, and every action — from minting to evolving — is powered by verified smart contracts and stored directly on the blockchain. No off-chain hacks, just pure on-chain play.
+                    </p>
+
+              
+                </div>
+            </section>
+
+            
 
             {/* Features Section */}
             <section
                 id="features"
-                className={`relative z-20 py-20 px-4 transition-all duration-1000 delay-500 ${isVisible.features ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+                className={`relative z-20 mb-8 px-4 transition-all duration-1000 delay-500 ${isVisible.features ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
                     }`}
             >
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Why Choose Us?</h2>
-                        <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-                            We're not just another platform. We're your gateway to unlimited possibilities.
-                        </p>
+                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">About the project</h2>
+                     
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8">
                         {[
                             {
                                 icon: <Zap className="h-8 w-8" />,
-                                title: "Lightning Fast",
-                                description: "Experience blazing-fast performance that keeps up with your creativity.",
+                                title: "On-Chain",
+                                description: "Everything is on-chain, all the art and all the actions. We use X number of smart contracts to make this possible",
                             },
                             {
-                                icon: <Users className="h-8 w-8" />,
-                                title: "Community Driven",
-                                description: "Join thousands of creators building the future together.",
+                                icon: <Brush className="h-8 w-8" />,
+                                title: "Hand made art",
+                                description: "All 151 cards are hand drawn and pixelated by our artist, no use of AI",
                             },
                             {
                                 icon: <Star className="h-8 w-8" />,
-                                title: "Premium Quality",
-                                description: "Every detail crafted to perfection for the ultimate experience.",
+                                title: "Awesome experience",
+                                description: "Join us in an unique experience, only on Base",
                             },
                         ].map((feature, index) => (
                             <div
@@ -250,50 +229,7 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
                 </div>
             </section>
 
-            {/* Stats Section */}
-            <section
-                id="stats"
-                className={`relative z-20 py-20 px-4 transition-all duration-1000 delay-700 ${isVisible.stats ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-                    }`}
-            >
-                <div className="max-w-4xl mx-auto">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                        {[
-                            { number: "10K+", label: "Active Users" },
-                            { number: "99.9%", label: "Uptime" },
-                            { number: "50+", label: "Countries" },
-                            { number: "24/7", label: "Support" },
-                        ].map((stat, index) => (
-                            <div key={index} className="group">
-                                <div className="text-3xl md:text-4xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
-                                    {stat.number}
-                                </div>
-                                <div className="text-gray-400 text-sm uppercase tracking-wide">{stat.label}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* CTA Section */}
-            <section
-                id="cta"
-                className={`relative z-20 py-20 px-4 transition-all duration-1000 delay-900 ${isVisible.cta ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-                    }`}
-            >
-                <div className="max-w-4xl mx-auto text-center">
-                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to Begin?</h2>
-                    <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-                        Join thousands of creators who have already transformed their workflow with our platform.
-                    </p>
-                    <Button
-                        size="lg"
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-12 py-4 text-lg"
-                    >
-                        Start Your Journey <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                </div>
-            </section>
+           
 
             <style>{`
         @keyframes scroll-left {
