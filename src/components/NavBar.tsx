@@ -54,7 +54,7 @@ export default function NavBar({ setCurrentView, currentView }: NavBarProps) {
             case "eggs":
                 return "bg-green-900/80 backdrop-blur-md"
             case "collection":
-                return "bg-purple-900/80 backdrop-blur-md"
+                return "bg-teal-900/80 backdrop-blur-md"
             case "dex":
                 return "bg-black/80 backdrop-blur-md"
             default:

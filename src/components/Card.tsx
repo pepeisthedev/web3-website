@@ -79,7 +79,7 @@ export default function Card({
   return (
      <div className="w-auto h-auto flex flex-row justify-center items-center m-0">
       <div className="w-full max-w-6xl flex flex-row justify-center items-center">
-        <div className="w-32 sm:w-48 h-40 sm:h-60 perspective-1000 cursor-pointer m-1 sm:m-2" onClick={handleCardClick}>
+        <div className="w-32 sm:w-48 h-44 sm:h-60 perspective-1000 cursor-pointer m-1 sm:m-2" onClick={handleCardClick}>
           <div
             className={`relative w-full h-full transition-transform duration-300 ease-out preserve-3d ${
               shouldShowFront ? "" : "rotate-y-180"

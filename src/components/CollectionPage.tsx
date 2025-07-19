@@ -52,6 +52,13 @@ export default function CollectionPage() {
     const [viewMode, setViewMode] = useState<ViewMode>('large-grid')
     const [hideDuplicates, setHideDuplicates] = useState<boolean>(false)
     const [showOnlyDuplicates, setShowOnlyDuplicates] = useState<boolean>(false)
+
+    // Set responsive default view mode on component mount
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            setViewMode('small-grid')
+        }
+    }, [])
     const [userCandyBalance, setUserCandyBalance] = useState<number>(0)
     const [candyRates, setCandyRates] = useState<CandyRates>({
         candies3Cards: [],
@@ -334,24 +341,24 @@ export default function CollectionPage() {
 
                 {/* Stats */}
                 <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 mb-8">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex gap-8 text-center">
-                            <div className="bg-black border-2 border-gray-400 rounded p-4">
+                    <div className="flex justify-center items-center">
+                        <div className="flex gap-2 sm:gap-4 md:gap-8 text-center">
+                            <div className="bg-black border-2 border-gray-400 rounded p-2 sm:p-3 md:p-4 flex-1 min-w-0">
                                 <div className="text-green-400 font-mono text-center">
-                                    <div className="text-sm mb-2">TOTAL CARDS</div>
-                                    <div className="text-2xl font-bold tracking-widest">{totalCards.toString().padStart(3, '0')}</div>
+                                    <div className="text-xs sm:text-sm mb-1 sm:mb-2">TOTAL CARDS</div>
+                                    <div className="text-lg sm:text-xl md:text-2xl font-bold tracking-widest">{totalCards.toString().padStart(3, '0')}</div>
                                 </div>
                             </div>
-                            <div className="bg-black border-2 border-gray-400 rounded p-4">
+                            <div className="bg-black border-2 border-gray-400 rounded p-2 sm:p-3 md:p-4 flex-1 min-w-0">
                                 <div className="text-green-400 font-mono text-center">
-                                    <div className="text-sm mb-2">UNIQUE CARDS</div>
-                                    <div className="text-2xl font-bold tracking-widest">{uniqueCards.toString().padStart(3, '0')}</div>
+                                    <div className="text-xs sm:text-sm mb-1 sm:mb-2">UNIQUE CARDS</div>
+                                    <div className="text-lg sm:text-xl md:text-2xl font-bold tracking-widest">{uniqueCards.toString().padStart(3, '0')}</div>
                                 </div>
                             </div>
-                            <div className="bg-black border-2 border-gray-400 rounded p-4">
+                            <div className="bg-black border-2 border-gray-400 rounded p-2 sm:p-3 md:p-4 flex-1 min-w-0">
                                 <div className="text-green-400 font-mono text-center">
-                                    <div className="text-sm mb-2">CANDIES</div>
-                                    <div className="text-2xl font-bold tracking-widest">{userCandyBalance.toString().padStart(3, '0')}</div>
+                                    <div className="text-xs sm:text-sm mb-1 sm:mb-2">CANDIES</div>
+                                    <div className="text-lg sm:text-xl md:text-2xl font-bold tracking-widest">{userCandyBalance.toString().padStart(3, '0')}</div>
                                 </div>
                             </div>
                         </div>
@@ -366,7 +373,7 @@ export default function CollectionPage() {
                     <div className="flex flex-col items-center gap-2 md:gap-6">
                         {/* Card Display */}
                         <div className="flex-shrink-0">
-                            <div className="w-48 h-42 md:h-64">
+                            <div className="w-48 h-46 md:h-64">
                                 {selectedCard ? (
                                     <Card 
                                         cardData={selectedCard}
@@ -399,17 +406,19 @@ export default function CollectionPage() {
                                     }
                                 })() : "No Card Selected"}
                             </h3>
-                            <p className="text-sm mb-4">
-                                {selectedCard ? `Card ID: #${selectedCard.cardId}` : "Click on a card below to select it"}
-                            </p>
+                            {!selectedCard && (
+                                <p className="text-sm mb-4">
+                                    Click on a card below to select it
+                                </p>
+                            )}
                         </div>
                         
                         {/* Card Actions */}
-                        <div className="flex gap-4 w-full max-w-md">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full max-w-md px-2 sm:px-0">
                             <Button
                                 onClick={() => selectedCard && setShowDoctorModal(true)}
                                 disabled={!selectedCard}
-                                className={`flex-1 border-4 font-mono font-bold py-3 ${
+                                className={`flex-1 border-4 font-mono font-bold py-2 sm:py-3 text-sm sm:text-base ${
                                     selectedCard 
                                         ? 'bg-red-600 hover:bg-red-700 border-red-400 text-white'
                                         : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
@@ -420,7 +429,7 @@ export default function CollectionPage() {
                             </Button>
                             <Button
                                 disabled
-                                className="flex-1 bg-gray-600 border-4 border-gray-400 text-gray-300 font-mono font-bold py-3 cursor-not-allowed"
+                                className="flex-1 bg-gray-600 border-4 border-gray-400 text-gray-300 font-mono font-bold py-2 sm:py-3 text-sm sm:text-base cursor-not-allowed"
                             >
                                 <ArrowUp className="w-4 h-4 mr-2" />
                                 UPGRADE
@@ -482,7 +491,7 @@ export default function CollectionPage() {
                                             }}
                                             className="border-yellow-300 data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
                                         />
-                                        <label htmlFor="hideDuplicates" className={`text-sm cursor-pointer font-mono ${showOnlyDuplicates ? 'text-gray-400' : 'text-yellow-300'}`}>
+                                        <label htmlFor="hideDuplicates" className={`text-xs sm:text-sm cursor-pointer font-mono ${showOnlyDuplicates ? 'text-gray-400' : 'text-yellow-300'}`}>
                                             HIDE DUPLICATES
                                         </label>
                                     </div>
@@ -498,7 +507,7 @@ export default function CollectionPage() {
                                             }}
                                             className="border-yellow-300 data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
                                         />
-                                        <label htmlFor="showOnlyDuplicates" className={`text-sm cursor-pointer font-mono ${hideDuplicates ? 'text-gray-400' : 'text-yellow-300'}`}>
+                                        <label htmlFor="showOnlyDuplicates" className={`text-xs sm:text-sm cursor-pointer font-mono ${hideDuplicates ? 'text-gray-400' : 'text-yellow-300'}`}>
                                             SHOW ONLY DUPLICATES
                                         </label>
                                     </div>
