@@ -13,12 +13,12 @@ import { Checkbox } from "./ui/checkbox"
 import cardContractABI from "../assets/abi/Bead151Card.json"
 import routerContractABI from "../assets/abi/Bead151ArtRouter.json"
 import candyContractABI from "../assets/abi/Bead151Candy.json"
-import candyPerCardContractABI from "../assets/abi/Bead151CandyPerCard.json"
+import characterStatsContractABI from "../assets/abi/Bead151CharacterStats.json"
 
 const cardContractAddress = import.meta.env.VITE_BEAD151_CARD_CONTRACT
 const routerContractAddress = import.meta.env.VITE_BEAD151_CARD_ART_CONTRACT
 const candyContractAddress = import.meta.env.VITE_BEAD151_CANDY_CONTRACT
-const candyPerCardContractAddress = import.meta.env.VITE_BEAD151_CANDY_PER_CARD_CONTRACT
+const characterStatsContractAddress = import.meta.env.VITE_BEAD151_CHARACTER_STATS_CONTRACT
 
 interface CardData {
     tokenId: number
@@ -31,11 +31,10 @@ interface CollectionCard extends CardData {
     count: number
 }
 
-interface CandyRates {
-    candies3Cards: number[]
-    candies5Cards: number[]
-    candies6Cards: number[]
-    candies7Cards: number[]
+interface CharacterStat {
+    cardId: number
+    candiesIfBurned: number
+    candiesToEvolve: number
 }
 
 type ViewMode = 'large-grid' | 'small-grid' | 'list'
@@ -61,13 +60,10 @@ export default function CollectionPage() {
         }
     }, [])
     const [userCandyBalance, setUserCandyBalance] = useState<number>(0)
-    const [candyRates, setCandyRates] = useState<CandyRates>({
-        candies3Cards: [],
-        candies5Cards: [],
-        candies6Cards: [],
-        candies7Cards: []
-    })
+    const [characterStats, setCharacterStats] = useState<Map<number, CharacterStat>>(new Map())
     const [showDoctorModal, setShowDoctorModal] = useState<boolean>(false)
+    const [showCongratulationsModal, setShowCongratulationsModal] = useState<boolean>(false)
+    const [candiesReceived, setCandiesReceived] = useState<number>(0)
     const [isLoadingCandy, setIsLoadingCandy] = useState<boolean>(false)
 
     useEffect(() => {
@@ -84,26 +80,33 @@ export default function CollectionPage() {
         try {
             const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
             const candyContract = new ethers.Contract(candyContractAddress, candyContractABI, ethersProvider)
-            const candyPerCardContract = new ethers.Contract(candyPerCardContractAddress, candyPerCardContractABI, ethersProvider)
+            const characterStatsContract = new ethers.Contract(characterStatsContractAddress, characterStatsContractABI, ethersProvider)
 
-            // Get user's candy balance (token ID 0 for candies)
-            const candyBalance = await candyContract.balanceOf(address, 1)
+            // Get user's candy balance (token ID 1 for candies)
+            console.log("Start fetch candies")
+            const candyBalance = await candyContract.getCandyBalance(address)
+            console.log("Fetched candy balance:", candyBalance.toString())
             setUserCandyBalance(Number(candyBalance))
 
-            // Get candy rates for different card types
-            const [candies3Cards, candies5Cards, candies6Cards, candies7Cards] = await Promise.all([
-                candyPerCardContract.getCandies3Cards(),
-                candyPerCardContract.getCandies5Cards(),
-                candyPerCardContract.getCandies6Cards(),
-                candyPerCardContract.getCandies7Cards()
-            ])
+            // Get all character stats in one call
+            const allStats = await characterStatsContract.getAllStats()
 
-            setCandyRates({
-                candies3Cards: candies3Cards.map((id: any) => Number(id)),
-                candies5Cards: candies5Cards.map((id: any) => Number(id)),
-                candies6Cards: candies6Cards.map((id: any) => Number(id)),
-                candies7Cards: candies7Cards.map((id: any) => Number(id))
+            // Convert to Map for efficient lookup
+            const statsMap = new Map<number, CharacterStat>()
+            allStats.forEach((stat: any) => {
+                const cardId = Number(stat.cardId)
+                const candiesIfBurned = Number(stat.candiesIfBurned)
+                const candiesToEvolve = Number(stat.candiesToEvolve)
+                
+                statsMap.set(cardId, {
+                    cardId,
+                    candiesIfBurned,
+                    candiesToEvolve
+                })
             })
+            
+            setCharacterStats(statsMap)
+            console.log("Character stats map:", statsMap)
 
         } catch (error) {
             console.error("Error fetching candy data:", error)
@@ -112,11 +115,13 @@ export default function CollectionPage() {
     }
 
     const getCandyReward = (cardId: number): number => {
-        if (candyRates.candies7Cards.includes(cardId)) return 7
-        if (candyRates.candies6Cards.includes(cardId)) return 6
-        if (candyRates.candies5Cards.includes(cardId)) return 5
-        if (candyRates.candies3Cards.includes(cardId)) return 3
-        return 0 // Default if card not found in any array
+        const stats = characterStats.get(cardId)
+        return stats ? stats.candiesIfBurned : 0
+    }
+
+    const getEvolutionCost = (cardId: number): number => {
+        const stats = characterStats.get(cardId)
+        return stats ? stats.candiesToEvolve : 0
     }
 
     const handleSendToDoctor = async () => {
@@ -127,10 +132,17 @@ export default function CollectionPage() {
             const signer = await ethersProvider.getSigner()
             const cardContract = new ethers.Contract(cardContractAddress, cardContractABI, signer)
 
+            // Get the candy reward before sending
+            const candyReward = getCandyReward(selectedCard.cardId)
+
             const tx = await cardContract.sendToDoctor(selectedCard.tokenId)
             console.log("token id sent to doctor:", selectedCard.tokenId)
             console.log("Card id sent to doctor:", selectedCard.cardId)
             await tx.wait()
+
+            // Show congratulations modal
+            setCandiesReceived(candyReward)
+            setShowCongratulationsModal(true)
 
             // Refresh collection and candy balance
             await Promise.all([fetchUserCollection(), fetchCandyData()])
@@ -166,7 +178,7 @@ export default function CollectionPage() {
         try {
             console.log("📋 Getting user cards from contract...")
             const [tokenIds, cardIds] = await cardContract.getUserCards(userAddress)
-            console.log("✅ User cards fetched:", { tokenIds: tokenIds, cardIds: cardIds })
+           // console.log("✅ User cards fetched:", { tokenIds: tokenIds, cardIds: cardIds })
             
             if (cardIds.length === 0) {
                 console.log("📭 User has no cards")
@@ -437,7 +449,26 @@ export default function CollectionPage() {
                                                 }
                                             })() : "No Card Selected"}
                                         </h3>
-                                        {!selectedCard && (
+                                        
+                                        {selectedCard ? (
+                                            <div className="space-y-2 text-sm">
+                                                <div className="bg-black border-2 border-gray-400 rounded p-2">
+                                                    <div className="text-orange-300 mb-1">🍬 BURN REWARD</div>
+                                                    <div className="text-yellow-300 font-bold">
+                                                        {getCandyReward(selectedCard.cardId)} Candies
+                                                    </div>
+                                                </div>
+                                                <div className="bg-black border-2 border-gray-400 rounded p-2">
+                                                    <div className="text-purple-300 mb-1">⚡ EVOLVE COST</div>
+                                                    <div className="text-yellow-300 font-bold">
+                                                        {getEvolutionCost(selectedCard.cardId) === 0 
+                                                            ? "Max evolved" 
+                                                            : `${getEvolutionCost(selectedCard.cardId)} Candies`
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
                                             <p className="text-sm mb-4">
                                                 Click on a card below to select it
                                             </p>
@@ -658,6 +689,39 @@ export default function CollectionPage() {
                                     CANCEL
                                 </Button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Congratulations Modal */}
+            {showCongratulationsModal && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 max-w-md w-full">
+                        <div className="text-center space-y-6">
+                            <div className="text-6xl mb-4">🎉</div>
+                            
+                            <h2 className="text-2xl font-bold text-yellow-300 font-mono">
+                                CONGRATULATIONS!
+                            </h2>
+                            
+                            <div className="bg-black border-2 border-gray-400 rounded-lg p-4">
+                                <div className="text-cyan-300 font-mono space-y-2">
+                                    <p className="text-lg">
+                                        Card successfully sent to doctor!
+                                    </p>
+                                    <div className="text-2xl font-bold text-yellow-300">
+                                        +{candiesReceived} 🍬 CANDIES
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Button
+                                onClick={() => setShowCongratulationsModal(false)}
+                                className="w-full bg-cyan-600 hover:bg-cyan-700 border-4 border-cyan-400 text-white font-mono font-bold py-3 text-lg"
+                            >
+                                AWESOME!
+                            </Button>
                         </div>
                     </div>
                 </div>
