@@ -19,6 +19,7 @@ interface TransactionModalProps {
   initImage: string
   onConfirm: () => Promise<void>
   extractedCards?: CardData[]
+  onOpenAnother?: () => Promise<void>
 }
 
 type ModalState = "init" | "waiting" | "completed" | "error"
@@ -32,6 +33,7 @@ export default function OpenPackTransactionModal({
   initImage,
   onConfirm,
   extractedCards = [],
+  onOpenAnother,
 }: TransactionModalProps) {
   const [modalState, setModalState] = useState<ModalState>("init")
   const [errorMessage, setErrorMessage] = useState("")
@@ -52,6 +54,20 @@ export default function OpenPackTransactionModal({
       console.error("Transaction error:", error)
       setModalState("error")
       setErrorMessage(error instanceof Error ? error.message : "Transaction failed")
+    }
+  }
+
+  const handleOpenAnother = async () => {
+    if (onOpenAnother) {
+      try {
+        setModalState("waiting")
+        await onOpenAnother()
+        setModalState("completed")
+      } catch (error) {
+        console.error("Open another pack error:", error)
+        setModalState("error")
+        setErrorMessage(error instanceof Error ? error.message : "Transaction failed")
+      }
     }
   }
 
@@ -135,12 +151,22 @@ export default function OpenPackTransactionModal({
                 ))}
               </div>
             </div>
-            <Button 
-              onClick={handleClose} 
-              className="px-8 bg-gray-600 border-2 border-gray-400 hover:bg-gray-700 text-white font-mono"
-            >
-              CLOSE
-            </Button>
+            <div className="flex gap-3 justify-center max-w-md mx-auto">
+              <Button 
+                onClick={handleClose} 
+                className="flex-1 bg-gray-600 border-2 border-gray-400 hover:bg-gray-700 text-white font-mono"
+              >
+                CLOSE
+              </Button>
+              {onOpenAnother && (
+                <Button 
+                  onClick={handleOpenAnother} 
+                  className="flex-1 bg-cyan-600 border-2 border-cyan-400 hover:bg-cyan-700 text-white font-mono"
+                >
+                  OPEN ANOTHER
+                </Button>
+              )}
+            </div>
           </div>
         )}
 

@@ -1,0 +1,94 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "incubating",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "hatchable",
+        "type": "bool"
+      }
+    ],
+    "name": "generateEggSVG",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "tokenIds",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "incubating",
+        "type": "bool[]"
+      },
+      {
+        "internalType": "bool[]",
+        "name": "hatchable",
+        "type": "bool[]"
+      }
+    ],
+    "name": "generateEggSVGBatch",
+    "outputs": [
+      {
+        "internalType": "string[]",
+        "name": "svgs",
+        "type": "string[]"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "incubating",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "hatchable",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "theme",
+        "type": "uint256"
+      }
+    ],
+    "name": "generateThemedEggSVG",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  }
+]

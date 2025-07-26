@@ -103,9 +103,7 @@ export default function OpenPackPage() {
         const packContract = new ethers.Contract(packsContractAddress, packContractAbi, signer)
         const cardContract = new ethers.Contract(cardContractAddress, cardContractAbi, signer)
 
-        const tx = await packContract.openPack({
-            gasLimit: 500000,
-        })
+        const tx = await packContract.openPack()
 
         const receipt = await tx.wait()
 
@@ -252,6 +250,7 @@ export default function OpenPackPage() {
                     initImage="/images/pack.png"
                     onConfirm={executeOpenPack}
                     extractedCards={extractedCards}
+                    {...(packCount >= 1 && { onOpenAnother: executeOpenPack })}
                 />
             </div>
 
