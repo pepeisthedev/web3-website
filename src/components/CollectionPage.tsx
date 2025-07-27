@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react"
 import { ethers } from "ethers"
 import Card from "./Card"
-import { Loader2, Search, Grid, List, ChevronDown, Grid3X3, LayoutGrid, Heart, ArrowUp, Columns, Rows, Filter, X } from "lucide-react"
+import { Loader2, Search, Grid, List, ChevronDown, LayoutGrid, Heart, ArrowUp, Columns, Rows, Filter, X } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Checkbox } from "./ui/checkbox"
@@ -37,7 +37,7 @@ interface CharacterStat {
     candiesToEvolve: number
 }
 
-type ViewMode = 'large-grid' | 'small-grid' | 'dex' | 'list'
+type ViewMode = 'large-grid' | 'dex' | 'list'
 
 export default function CollectionPage() {
     const { address, isConnected } = useAppKitAccount()
@@ -68,7 +68,7 @@ export default function CollectionPage() {
     // Set responsive default view mode on component mount
     useEffect(() => {
         if (typeof window !== 'undefined' && window.innerWidth < 768) {
-            setViewMode('small-grid')
+            setViewMode('dex')
         }
     }, [])
     const [userCandyBalance, setUserCandyBalance] = useState<number>(0)
@@ -366,10 +366,6 @@ export default function CollectionPage() {
                 return isSideBySide
                     ? 'grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-4 2xl:grid-cols-5'
                     : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6'
-            case 'small-grid':
-                return isSideBySide
-                    ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8'
-                    : 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10'
             case 'dex':
                 return isSideBySide
                     ? 'grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-1'
@@ -611,14 +607,6 @@ export default function CollectionPage() {
                                                 title="Large Grid"
                                             >
                                                 <LayoutGrid className="h-4 w-4 flex-shrink-0" />
-                                            </Button>
-                                            <Button
-                                                onClick={() => setViewMode('small-grid')}
-                                                className={`${viewMode === 'small-grid' ? 'bg-cyan-600 border-cyan-400' : 'bg-teal-700 border-gray-400'} text-yellow-300 font-mono border-2 px-3 py-2 min-w-[44px] flex items-center justify-center`}
-                                                size="sm"
-                                                title="Small Grid"
-                                            >
-                                                <Grid3X3 className="h-4 w-4 flex-shrink-0" />
                                             </Button>
                                             <Button
                                                 onClick={() => setViewMode('dex')}
