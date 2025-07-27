@@ -11,12 +11,10 @@ import { Checkbox } from "./ui/checkbox"
 
 // Contract addresses and ABIs
 import cardContractABI from "../assets/abi/Bead151Card.json"
-import routerContractABI from "../assets/abi/Bead151ArtRouter.json"
 import candyContractABI from "../assets/abi/Bead151Candy.json"
 import characterStatsContractABI from "../assets/abi/Bead151CharacterStats.json"
 
 const cardContractAddress = import.meta.env.VITE_BEAD151_CARD_CONTRACT
-const routerContractAddress = import.meta.env.VITE_BEAD151_CARD_ART_CONTRACT
 const candyContractAddress = import.meta.env.VITE_BEAD151_CANDY_CONTRACT
 const characterStatsContractAddress = import.meta.env.VITE_BEAD151_CHARACTER_STATS_CONTRACT
 
@@ -33,8 +31,10 @@ interface CollectionCard extends CardData {
 
 interface CharacterStat {
     cardId: number
+    nextEvolutionCardId: number
     candiesIfBurned: number
     candiesToEvolve: number
+    rarity: number
 }
 
 type ViewMode = 'large-grid' | 'dex' | 'list'
@@ -74,6 +74,10 @@ export default function CollectionPage() {
     const [userCandyBalance, setUserCandyBalance] = useState<number>(0)
     const [characterStats, setCharacterStats] = useState<Map<number, CharacterStat>>(new Map())
     const [showDoctorModal, setShowDoctorModal] = useState<boolean>(false)
+    const [showEvolveModal, setShowEvolveModal] = useState<boolean>(false)
+    const [showEvolutionResultModal, setShowEvolutionResultModal] = useState<boolean>(false)
+    const [evolvedCardId, setEvolvedCardId] = useState<number>(0)
+    const [evolvedCardData, setEvolvedCardData] = useState<{ svg: string, description: string } | null>(null)
     const [showCongratulationsModal, setShowCongratulationsModal] = useState<boolean>(false)
     const [candiesReceived, setCandiesReceived] = useState<number>(0)
     const [isLoadingCandy, setIsLoadingCandy] = useState<boolean>(false)
@@ -126,13 +130,17 @@ export default function CollectionPage() {
             const statsMap = new Map<number, CharacterStat>()
             allStats.forEach((stat: any) => {
                 const cardId = Number(stat.cardId)
+                const nextEvolutionCardId = Number(stat.nextEvolutionCardId)
                 const candiesIfBurned = Number(stat.candiesIfBurned)
                 const candiesToEvolve = Number(stat.candiesToEvolve)
+                const rarity = Number(stat.rarity)
 
                 statsMap.set(cardId, {
                     cardId,
+                    nextEvolutionCardId,
                     candiesIfBurned,
-                    candiesToEvolve
+                    candiesToEvolve,
+                    rarity
                 })
             })
 
@@ -153,6 +161,89 @@ export default function CollectionPage() {
     const getEvolutionCost = (cardId: number): number => {
         const stats = characterStats.get(cardId)
         return stats ? stats.candiesToEvolve : 0
+    }
+
+    const getNextEvolutionCardId = (cardId: number): number => {
+        const stats = characterStats.get(cardId)
+        return stats ? stats.nextEvolutionCardId : 0
+    }
+
+    const canEvolve = (cardId: number): boolean => {
+        const evolutionCost = getEvolutionCost(cardId)
+        return evolutionCost > 0 && userCandyBalance >= evolutionCost
+    }
+
+    const getEvolveButtonText = (cardId: number): string => {
+        const evolutionCost = getEvolutionCost(cardId)
+        if (evolutionCost === 0) {
+            return 'MAX EVOLVED'
+        }
+        if (userCandyBalance < evolutionCost) {
+            return 'NEED CANDIES'
+        }
+        return 'EVOLVE'
+    }
+
+    const getCardDataById = async (cardId: number): Promise<{ svg: string, description: string } | null> => {
+        try {
+            const response = await fetch(`/metadata/dex/card-${cardId.toString().padStart(3, '0')}.json`)
+            if (!response.ok) {
+                throw new Error(`Failed to load metadata for card ${cardId}`)
+            }
+            
+            const metadata = await response.json()
+            console.log(`Loaded metadata for card ${cardId}:`, metadata)
+            
+            return {
+                svg: `/images/dex/svgs/card-${cardId.toString().padStart(3, '0')}.svg`,
+                description: JSON.stringify(metadata)
+            }
+        } catch (error) {
+            console.error(`Error loading metadata for card ${cardId}:`, error)
+            return null
+        }
+    }
+
+    const handleEvolveCard = async () => {
+        if (!selectedCard || !walletProvider) return
+
+        try {
+            const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
+            const signer = await ethersProvider.getSigner()
+            const candyContract = new ethers.Contract(candyContractAddress, candyContractABI, signer)
+
+            console.log("Evolving card token id:", selectedCard.tokenId)
+            const tx = await candyContract.evolveCard(selectedCard.tokenId)
+   
+            await tx.wait()
+
+            // Show evolution result modal
+            const nextCardId = getNextEvolutionCardId(selectedCard.cardId)
+            setEvolvedCardId(nextCardId)
+            
+            // Fetch the evolved card data
+            const evolvedData = await getCardDataById(nextCardId)
+            setEvolvedCardData(evolvedData)
+            
+            setShowEvolutionResultModal(true)
+
+            // Refresh collection and candy balance
+            await Promise.all([fetchUserCollection(), fetchCandyData()])
+            setSelectedCard(null)
+            setShowEvolveModal(false)
+        } catch (error) {
+            console.error("Error evolving card:", error)
+        }
+    }
+
+    const handleOpenEvolveModal = async () => {
+        if (!selectedCard) return
+        
+        // Pre-load the evolved card data
+        const nextCardId = getNextEvolutionCardId(selectedCard.cardId)
+        const evolvedData = await getCardDataById(nextCardId)
+        setEvolvedCardData(evolvedData)
+        setShowEvolveModal(true)
     }
 
     const handleSendToDoctor = async () => {
@@ -204,7 +295,6 @@ export default function CollectionPage() {
 
         const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
         const cardContract = new ethers.Contract(cardContractAddress, cardContractABI, ethersProvider)
-        const routerContract = new ethers.Contract(routerContractAddress, routerContractABI, ethersProvider)
 
         try {
             console.log("📋 Getting user cards from contract...")
@@ -221,16 +311,38 @@ export default function CollectionPage() {
 
             console.log("🔄 Converted arrays:", { tokenIdsArray, cardIdsArray })
 
-            console.log("🎴 Fetching SVGs and metadata in batch...")
-            const [svgs, metadata] = await routerContract.renderAndMetaBatch(cardIdsArray)
-            console.log("✅ Batch data fetched successfully")
+            console.log("🎴 Loading card data from static files...")
+            const allCardData: CardData[] = await Promise.all(
+                cardIdsArray.map(async (cardId: number, index: number) => {
+                    try {
+                        const response = await fetch(`/metadata/dex/card-${cardId.toString().padStart(3, '0')}.json`)
+                        let description = `Card #${cardId}`
+                        
+                        if (response.ok) {
+                            const metadata = await response.json()
+                            description = JSON.stringify(metadata)
+                        } else {
+                            console.warn(`Failed to load metadata for card ${cardId}`)
+                        }
 
-            const allCardData: CardData[] = cardIdsArray.map((cardId: number, index: number) => ({
-                tokenId: tokenIdsArray[index],
-                cardId: cardId,
-                svg: svgs[index] || "",
-                description: metadata[index] || `Card #${cardId}`,
-            }))
+                        return {
+                            tokenId: tokenIdsArray[index],
+                            cardId: cardId,
+                            svg: `/images/dex/svgs/card-${cardId.toString().padStart(3, '0')}.svg`,
+                            description: description,
+                        }
+                    } catch (error) {
+                        console.warn(`Error loading metadata for card ${cardId}:`, error)
+                        return {
+                            tokenId: tokenIdsArray[index],
+                            cardId: cardId,
+                            svg: `/images/dex/svgs/card-${cardId.toString().padStart(3, '0')}.svg`,
+                            description: `Card #${cardId}`,
+                        }
+                    }
+                })
+            )
+            console.log("✅ Card data loaded from static files")
 
             console.log("🎯 Collection processed:", allCardData.length, "cards")
             return allCardData
@@ -529,14 +641,18 @@ export default function CollectionPage() {
                                                 }`}
                                         >
                                             <Heart className="w-4 h-4 mr-1 sm:mr-2" />
-                                            SEND
+                                            BURN
                                         </Button>
                                         <Button
-                                            disabled
-                                            className="flex-1 bg-gray-600 border-4 border-gray-400 text-gray-300 font-mono font-bold py-2 sm:py-3 text-xs sm:text-sm lg:text-xs xl:text-sm cursor-not-allowed"
+                                            onClick={() => selectedCard && handleOpenEvolveModal()}
+                                            disabled={!selectedCard || !canEvolve(selectedCard.cardId)}
+                                            className={`flex-1 border-4 font-mono font-bold py-2 sm:py-3 text-xs sm:text-sm lg:text-xs xl:text-sm ${selectedCard && canEvolve(selectedCard.cardId)
+                                                ? 'bg-purple-600 hover:bg-purple-700 border-purple-400 text-white'
+                                                : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
+                                                }`}
                                         >
                                             <ArrowUp className="w-4 h-4 mr-1 sm:mr-2" />
-                                            UPGRADE
+                                            {selectedCard ? getEvolveButtonText(selectedCard.cardId) : 'CANNOT EVOLVE'}
                                         </Button>
                                     </div>
                                 </div>
@@ -798,6 +914,160 @@ export default function CollectionPage() {
                                         RESET TO DEFAULT
                                     </Button>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Evolve Modal */}
+                {showEvolveModal && selectedCard && (
+                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                        <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-4 sm:p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                            <div className="text-center space-y-4 sm:space-y-6">
+                                <h2 className="text-xl sm:text-2xl font-bold text-yellow-300 font-mono">
+                                    EVOLVE BEAD151
+                                </h2>
+
+                                {/* Evolution Preview */}
+                                <div className="flex items-center justify-center gap-3 sm:gap-4">
+                                    {/* Current Card */}
+                                    <div className="flex flex-col items-center flex-1">
+                                        <div className="text-cyan-300 font-mono mb-2 text-xs sm:text-sm">CURRENT</div>
+                                        <div className="w-30 h-30 sm:w-38 sm:h-38 mb-2 bg-black border-2 border-yellow-300 rounded-lg overflow-hidden">
+                                            <img
+                                                src={getImageSrc(selectedCard)}
+                                                alt={`Card ${selectedCard.cardId}`}
+                                                className="w-full h-full object-contain pixelated"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = '/placeholder.svg'
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="text-xs text-gray-300 font-mono">
+                                            #{selectedCard.cardId.toString().padStart(3, '0')}
+                                        </div>
+                                    </div>
+
+                                    {/* Arrow */}
+                                    <div className="flex flex-col items-center text-yellow-300 px-2">
+                                        <ArrowUp className="h-12 w-12 sm:h-12 sm:w-12 rotate-90" />
+                                    </div>
+
+                                    {/* Next Evolution Card */}
+                                    <div className="flex flex-col items-center flex-1">
+                                        <div className="text-purple-300 font-mono mb-2 text-xs sm:text-sm">EVOLVED</div>
+                                        <div className="w-30 h-30 sm:w-38 sm:h-38 mb-2 bg-black border-2 border-purple-400 rounded-lg overflow-hidden">
+                                            {evolvedCardData ? (
+                                                <img
+                                                    src={evolvedCardData.svg}
+                                                    alt={`Card ${getNextEvolutionCardId(selectedCard.cardId)}`}
+                                                    className="w-full h-full object-contain pixelated"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = '/placeholder.svg'
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <div className="text-gray-400 font-mono text-center">
+                                                        <Loader2 className="h-4 w-4 sm:h-6 sm:w-6 animate-spin mx-auto mb-1" />
+                                                        <div className="text-[10px] sm:text-xs">LOADING...</div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-gray-300 font-mono">
+                                            #{getNextEvolutionCardId(selectedCard.cardId).toString().padStart(3, '0')}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Evolution Info */}
+                                <div className="bg-black border-2 border-gray-400 rounded-lg p-3 sm:p-4">
+                                    <div className="text-cyan-300 font-mono space-y-2 sm:space-y-3">
+                                        <p className="text-sm sm:text-base">
+                                            Are you sure you want to evolve this Bead151?
+                                        </p>
+                                        <div className="text-lg sm:text-xl font-bold text-yellow-300">
+                                            Cost: {getEvolutionCost(selectedCard.cardId)} 🍬 CANDIES
+                                        </div>
+                                        <p className="text-xs sm:text-sm text-orange-300 leading-relaxed">
+                                            ⚠️ WARNING: This action cannot be reverted!
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
+                                    <Button
+                                        onClick={handleEvolveCard}
+                                        disabled={!selectedCard || !canEvolve(selectedCard.cardId)}
+                                        className={`flex-1 border-4 font-mono font-bold py-2 sm:py-3 text-sm sm:text-base ${
+                                            selectedCard && canEvolve(selectedCard.cardId)
+                                                ? 'bg-purple-600 hover:bg-purple-700 border-purple-400 text-white'
+                                                : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
+                                        }`}
+                                    >
+                                        {selectedCard ? getEvolveButtonText(selectedCard.cardId) : 'CANNOT EVOLVE'}
+                                    </Button>
+                                    <Button
+                                        onClick={() => setShowEvolveModal(false)}
+                                        className="flex-1 bg-gray-600 hover:bg-gray-700 border-4 border-gray-400 text-white font-mono font-bold py-2 sm:py-3 text-sm sm:text-base"
+                                    >
+                                        CANCEL
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Evolution Result Modal */}
+                {showEvolutionResultModal && (
+                    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                        <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-4 sm:p-6 max-w-md w-full">
+                            <div className="text-center space-y-4 sm:space-y-6">
+                                <div className="text-4xl sm:text-6xl mb-2 sm:mb-4">✨</div>
+
+                                <h2 className="text-xl sm:text-2xl font-bold text-yellow-300 font-mono">
+                                    EVOLUTION COMPLETE!
+                                </h2>
+
+                                <div className="text-base sm:text-lg text-purple-300 font-mono mb-3 sm:mb-4">
+                                    Your Bead151 has evolved!
+                                </div>
+
+                                {/* Show evolved card */}
+                                <div className="flex justify-center mb-4 sm:mb-6">
+                                    <div className="w-32 h-32 sm:w-48 sm:h-48 bg-black border-4 border-purple-400 rounded-lg overflow-hidden">
+                                        {evolvedCardData ? (
+                                            <img
+                                                src={evolvedCardData.svg}
+                                                alt={`Evolved Card ${evolvedCardId}`}
+                                                className="w-full h-full object-contain pixelated"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = '/placeholder.svg'
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center animate-pulse">
+                                                <div className="text-gray-400 font-mono text-center">
+                                                    <div className="text-xl sm:text-2xl mb-2">🎉</div>
+                                                    <div className="text-xs sm:text-sm">EVOLVED CARD</div>
+                                                    <div className="text-xs mt-2">#{evolvedCardId.toString().padStart(3, '0')}</div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <Button
+                                    onClick={() => {
+                                        setShowEvolutionResultModal(false)
+                                        setSelectedCard(null) // Deselect all cards
+                                    }}
+                                    className="w-full bg-purple-600 hover:bg-purple-700 border-4 border-purple-400 text-white font-mono font-bold py-2 sm:py-3 text-sm sm:text-lg"
+                                >
+                                    AMAZING!
+                                </Button>
                             </div>
                         </div>
                     </div>

@@ -56,6 +56,11 @@
           },
           {
             "internalType": "uint256",
+            "name": "nextEvolutionCardId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
             "name": "candiesIfBurned",
             "type": "uint256"
           },
@@ -174,6 +179,11 @@
           {
             "internalType": "uint256",
             "name": "cardId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nextEvolutionCardId",
             "type": "uint256"
           },
           {
