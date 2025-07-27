@@ -19,11 +19,15 @@ export default function MintPage() {
     const [quantity, setQuantity] = useState<number>(1)
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [showModal, setShowModal] = useState<boolean>(false)
+    const [freeMints, setFreeMints] = useState<number>(0)
 
     // Fetch pack price from contract
     useEffect(() => {
         fetchPackPrice()
-    }, [])
+        if (isConnected) {
+            fetchFreeMints()
+        }
+    }, [isConnected])
 
     const fetchPackPrice = async () => {
         try {
@@ -41,9 +45,33 @@ export default function MintPage() {
         }
     }
 
+    const fetchFreeMints = async () => {
+        try {
+            if (!walletProvider) return
+            const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
+            const signer = await ethersProvider.getSigner()
+            const address = await signer.getAddress()
+            const contract = new ethers.Contract(packContractAddress, packContractAbi, ethersProvider)
+
+            const freeMintsAvailable = await contract.getFreeMints(address)
+            console.log("Free mints fetched:", freeMintsAvailable.toString())
+            setFreeMints(Number(freeMintsAvailable))
+        } catch (error) {
+            console.error("Error fetching free mints:", error)
+            setFreeMints(0)
+        }
+    }
+
     const calculateTotalCost = (): string => {
-        const total = Number.parseFloat(packPrice) * quantity
+        const paidPacks = Math.max(0, quantity - freeMints)
+        const total = Number.parseFloat(packPrice) * paidPacks
         return total.toFixed(4)
+    }
+
+    const getPackBreakdown = () => {
+        const freePacks = Math.min(quantity, freeMints)
+        const paidPacks = Math.max(0, quantity - freeMints)
+        return { freePacks, paidPacks }
     }
 
     const handleQuantityChange = (newQuantity: number) => {
@@ -73,17 +101,17 @@ export default function MintPage() {
     
             const totalCost = ethers.parseEther(calculateTotalCost())
     
+            console.log(`Minting ${quantity} packs for ${calculateTotalCost()} ETH`)
             const tx = await contract.mintPack(quantity, {
                 value: totalCost,
-                gasLimit: 300000,
+                gasLimit: 300000 * quantity,
             })
     
-           const receipt =  await tx.wait()
-
-        console.log("🎉 Transaction confirmed!")
-        console.log("Block number:", receipt.blockNumber)
-        console.log("Gas used:", receipt.gasUsed.toString())
-        console.log("Transaction receipt:", receipt)
+            await tx.wait()
+            console.log("🎉 Transaction confirmed!")
+            
+            // Refresh free mints count after transaction
+            await fetchFreeMints()
         
         } catch (error: any) {
             // Handle different types of errors
@@ -138,6 +166,14 @@ export default function MintPage() {
                                 <p className="text-3xl font-bold text-yellow-300 font-mono">{packPrice} ETH</p>
                             </div>
 
+                            {/* Free Mints Counter */}
+                            {freeMints > 0 && (
+                                <div className="text-center md:text-left bg-black border-2 border-green-400 rounded p-4">
+                                    <p className="text-green-400 mb-2 font-mono text-sm">FREE MINTS AVAILABLE:</p>
+                                    <p className="text-3xl font-bold text-green-300 font-mono">{freeMints.toString().padStart(2, '0')}</p>
+                                </div>
+                            )}
+
                             {/* Quantity Selector */}
                             <div>
                                 <label className="block text-cyan-300 mb-3 font-bold text-left font-mono text-sm">QUANTITY (MAX 10):</label>
@@ -165,11 +201,32 @@ export default function MintPage() {
                             </div>
 
                             {/* Total Cost */}
-                            <div className="bg-black border-2 border-gray-400 rounded p-4">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-green-400 font-mono font-bold">TOTAL COST:</span>
-                                    <span className="text-2xl font-bold text-yellow-300 font-mono">{calculateTotalCost()} ETH</span>
-                                </div>
+                            <div className="bg-black border-2 border-gray-400 rounded p-4 space-y-2">
+                                {(() => {
+                                    const { freePacks, paidPacks } = getPackBreakdown()
+                                    return (
+                                        <>
+                                            {freePacks > 0 && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-green-400 font-mono font-bold">FREE PACKS:</span>
+                                                    <span className="text-lg font-bold text-green-300 font-mono">{freePacks}</span>
+                                                </div>
+                                            )}
+                                            {paidPacks > 0 && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-green-400 font-mono font-bold">PAID PACKS:</span>
+                                                    <span className="text-lg font-bold text-yellow-300 font-mono">{paidPacks}</span>
+                                                </div>
+                                            )}
+                                            <div className="border-t border-gray-400 pt-2">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-green-400 font-mono font-bold">TOTAL COST:</span>
+                                                    <span className="text-2xl font-bold text-yellow-300 font-mono">{calculateTotalCost()} ETH</span>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )
+                                })()}
                             </div>
 
                             {/* Mint Button */}
