@@ -16,7 +16,7 @@ export default function MainPage(): React.JSX.Element {
     return (
         <>
             <NavBar setCurrentView={setCurrentView} currentView={currentView} />
-            <div className="pt-16 lg:pt-0">
+            <div>
                 {currentView === "landing" && (
                     <LandingPage setCurrentView={setCurrentView}>
                     </LandingPage>

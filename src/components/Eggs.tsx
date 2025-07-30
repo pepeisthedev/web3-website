@@ -339,7 +339,7 @@ export default function Eggs() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-green-900 via-green-800 to-green-900 pt-4 md:pt-20 px-4">
+        <div className="min-h-screen bg-gradient-to-b from-green-900 via-green-800 to-green-900 pt-4 pt-20 xl:pt-40">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">

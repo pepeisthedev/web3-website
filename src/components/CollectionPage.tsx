@@ -476,7 +476,7 @@ export default function CollectionPage() {
         switch (viewMode) {
             case 'large-grid':
                 return isSideBySide
-                    ? 'grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-4 2xl:grid-cols-5'
+                    ? 'grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-4'
                     : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6'
             case 'dex':
                 return isSideBySide
@@ -505,7 +505,7 @@ export default function CollectionPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-teal-900 via-cyan-800 to-teal-900 pt-4 md:pt-20 px-4">
+        <div className="min-h-screen bg-gradient-to-b from-teal-900 via-cyan-800 to-teal-900 pt-20 xl:pt-40 px-4">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">

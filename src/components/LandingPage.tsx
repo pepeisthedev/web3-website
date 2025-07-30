@@ -135,7 +135,7 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
             {/* Hero Section */}
             <section
                 id="hero"
-                className={`relative z-20 min-h-screen flex items-center justify-center px-4 pt-20 md:pt-40 transition-all duration-1000 ${isVisible.hero ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+                className={`relative z-20 min-h-screen flex items-center justify-center px-4 pt-20 transition-all duration-1000 ${isVisible.hero ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
                     }`}
             >
                 <div className="max-w-4xl mx-auto text-center">
@@ -200,7 +200,7 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
             {/* Features Section */}
             <section
                 id="features"
-                className={`relative pt-10 z-20 mb-8 px-4 transition-all duration-1000 delay-500 ${isVisible.features ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+                className={`relative pt-10 md:pt-0 z-20 mb-8 px-4 transition-all duration-1000 delay-500 ${isVisible.features ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
                     }`}
             >
                 <div className="max-w-6xl mx-auto">
