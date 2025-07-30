@@ -493,11 +493,11 @@ export default function CollectionPage() {
 
     if (!isConnected) {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-teal-900 via-cyan-800 to-teal-900 pt-4 md:pt-20 px-4">
-                <div className="max-w-6xl mx-auto text-center">
-                    <h1 className="text-4xl font-bold text-yellow-300 mb-8 font-mono">BEAD151 COLLECTION</h1>
-                    <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-8">
-                        <p className="text-yellow-300 text-xl font-mono">Connect your wallet to view your collection</p>
+            <div className="min-h-screen bg-gradient-to-b from-teal-900 via-cyan-800 to-teal-900 pt-8 md:pt-16 px-2 md:px-4">
+                <div className="max-w-3xl mx-auto text-center">
+                    <h1 className="text-2xl md:text-3xl font-bold text-yellow-300 mb-4 font-mono">BEAD151 COLLECTION</h1>
+                    <div className="bg-teal-800 border-2 border-yellow-300 rounded-lg p-4 md:p-6">
+                        <p className="text-yellow-300 text-base md:text-lg font-mono">Connect your wallet to view your collection</p>
                     </div>
                 </div>
             </div>
@@ -505,36 +505,36 @@ export default function CollectionPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-teal-900 via-cyan-800 to-teal-900 pt-20 xl:pt-30 px-4">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen bg-gradient-to-b from-teal-900 via-cyan-800 to-teal-900 pt-20 md:pt-20 px-2 md:px-4">
+            <div className="max-w-5xl mx-auto">
                 {/* Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl md:text-5xl font-bold text-yellow-300 mb-4 font-mono tracking-wider">
+                <div className="text-center mb-4">
+                    <h1 className="text-2xl md:text-3xl font-bold text-yellow-300 mb-2 font-mono tracking-wider">
                         BEAD151 COLLECTION
                     </h1>
-                    <p className="text-xl text-cyan-300 font-mono">Your Trading Card Collection</p>
+                    <p className="text-base md:text-lg text-cyan-300 font-mono">Your Trading Card Collection</p>
                 </div>
 
                 {/* Stats */}
-                <div className="bg-teal-800 border-4 border-yellow-300 rounded-lg p-6 mb-8">
+                <div className="bg-teal-800 border-2 border-yellow-300 rounded-lg p-3 md:p-4 mb-4">
                     <div className="flex justify-center items-center">
-                        <div className="flex gap-2 sm:gap-4 md:gap-8 text-center">
-                            <div className="bg-black border-2 border-gray-400 rounded p-2 sm:p-3 md:p-4 flex-1 min-w-0">
+                        <div className="flex gap-2 sm:gap-3 md:gap-4 text-center">
+                            <div className="bg-black border-2 border-gray-400 rounded p-2 flex-1 min-w-0">
                                 <div className="text-green-400 font-mono text-center">
-                                    <div className="text-xs sm:text-sm mb-1 sm:mb-2">TOTAL CARDS</div>
-                                    <div className="text-lg sm:text-xl md:text-2xl font-bold tracking-widest">{totalCards.toString().padStart(3, '0')}</div>
+                                    <div className="text-xs mb-1">TOTAL</div>
+                                    <div className="text-base md:text-lg font-bold tracking-widest">{totalCards.toString().padStart(3, '0')}</div>
                                 </div>
                             </div>
-                            <div className="bg-black border-2 border-gray-400 rounded p-2 sm:p-3 md:p-4 flex-1 min-w-0">
+                            <div className="bg-black border-2 border-gray-400 rounded p-2 flex-1 min-w-0">
                                 <div className="text-green-400 font-mono text-center">
-                                    <div className="text-xs sm:text-sm mb-1 sm:mb-2">UNIQUE CARDS</div>
-                                    <div className="text-lg sm:text-xl md:text-2xl font-bold tracking-widest">{uniqueCards.toString().padStart(3, '0')}</div>
+                                    <div className="text-xs mb-1">UNIQUE</div>
+                                    <div className="text-base md:text-lg font-bold tracking-widest">{uniqueCards.toString().padStart(3, '0')}</div>
                                 </div>
                             </div>
-                            <div className="bg-black border-2 border-gray-400 rounded p-2 sm:p-3 md:p-4 flex-1 min-w-0">
+                            <div className="bg-black border-2 border-gray-400 rounded p-2 flex-1 min-w-0">
                                 <div className="text-green-400 font-mono text-center">
-                                    <div className="text-xs sm:text-sm mb-1 sm:mb-2">CANDIES</div>
-                                    <div className="text-lg sm:text-xl md:text-2xl font-bold tracking-widest">{userCandyBalance.toString().padStart(3, '0')}</div>
+                                    <div className="text-xs mb-1">CANDY</div>
+                                    <div className="text-base md:text-lg font-bold tracking-widest">{userCandyBalance.toString().padStart(3, '0')}</div>
                                 </div>
                             </div>
                         </div>
@@ -631,11 +631,11 @@ export default function CollectionPage() {
                                     </div>
 
                                     {/* Card Actions */}
-                                    <div className="flex flex-row sm:flex-row gap-2 sm:gap-4 w-full px-2 sm:px-0">
+                                    <div className="flex flex-row sm:flex-row gap-2 sm:gap-4 w-full px-2 sm:px-0 flex-wrap">
                                         <Button
                                             onClick={() => selectedCard && setShowDoctorModal(true)}
                                             disabled={!selectedCard}
-                                            className={`flex-1 border-4 font-mono font-bold py-2 sm:py-3 text-xs sm:text-sm lg:text-xs xl:text-sm ${selectedCard
+                                            className={`flex-1 min-w-[120px] border-4 font-mono font-bold py-2 sm:py-3 text-xs sm:text-sm lg:text-xs xl:text-sm ${selectedCard
                                                 ? 'bg-red-600 hover:bg-red-700 border-red-400 text-white'
                                                 : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
                                                 }`}
@@ -646,7 +646,7 @@ export default function CollectionPage() {
                                         <Button
                                             onClick={() => selectedCard && handleOpenEvolveModal()}
                                             disabled={!selectedCard || !canEvolve(selectedCard.cardId)}
-                                            className={`flex-1 border-4 font-mono font-bold py-2 sm:py-3 text-xs sm:text-sm lg:text-xs xl:text-sm ${selectedCard && canEvolve(selectedCard.cardId)
+                                            className={`flex-1 min-w-[140px] border-4 font-mono font-bold py-2 sm:py-3 text-xs sm:text-sm lg:text-xs xl:text-sm ${selectedCard && canEvolve(selectedCard.cardId)
                                                 ? 'bg-purple-600 hover:bg-purple-700 border-purple-400 text-white'
                                                 : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
                                                 }`}
@@ -738,7 +738,7 @@ export default function CollectionPage() {
 
                                 {/* Card Grid */}
                                 {filteredAndSortedCards.length > 0 ? (
-                                    <div className="max-h-72 overflow-y-auto">
+                                    <div className="max-h-124 overflow-y-auto">
                                         <div className={getGridClasses()}>
                                             {filteredAndSortedCards.map((card, index) => (
                                                 <div
