@@ -1,6 +1,22 @@
 [
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_characterStatsContract",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_cardContract",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_artContract",
+        "type": "address"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },

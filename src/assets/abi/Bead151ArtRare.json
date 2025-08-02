@@ -5,6 +5,21 @@
         "internalType": "uint256",
         "name": "cardId",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "attack",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "hp",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "defense",
+        "type": "uint8"
       }
     ],
     "name": "meta",
@@ -24,6 +39,21 @@
         "internalType": "uint256[]",
         "name": "cardIds",
         "type": "uint256[]"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "attacks",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "hps",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "defenses",
+        "type": "uint8[]"
       }
     ],
     "name": "metaBatch",
@@ -62,6 +92,21 @@
         "internalType": "uint256[]",
         "name": "cardIds",
         "type": "uint256[]"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "attacks",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "hps",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "defenses",
+        "type": "uint8[]"
       }
     ],
     "name": "renderAndMetaBatch",

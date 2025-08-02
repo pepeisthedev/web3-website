@@ -91,31 +91,27 @@
         "type": "uint256"
       }
     ],
-    "name": "getCardIdFromEgg",
+    "name": "getCardIdAndStatsFromEgg",
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "cardId",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
+      },
       {
-        "internalType": "uint256",
-        "name": "rand",
-        "type": "uint256"
-      }
-    ],
-    "name": "getCardIdFromPack",
-    "outputs": [
+        "internalType": "uint8",
+        "name": "attack",
+        "type": "uint8"
+      },
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
+        "internalType": "uint8",
+        "name": "hp",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "defense",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -153,12 +149,27 @@
         "type": "uint256"
       }
     ],
-    "name": "getFiveCardsFromPack",
+    "name": "getFiveCardsAndStatsFromPack",
     "outputs": [
       {
         "internalType": "uint256[5]",
         "name": "cardIds",
         "type": "uint256[5]"
+      },
+      {
+        "internalType": "uint8[5]",
+        "name": "attacks",
+        "type": "uint8[5]"
+      },
+      {
+        "internalType": "uint8[5]",
+        "name": "hps",
+        "type": "uint8[5]"
+      },
+      {
+        "internalType": "uint8[5]",
+        "name": "defenses",
+        "type": "uint8[5]"
       }
     ],
     "stateMutability": "nonpayable",
@@ -263,6 +274,11 @@
     ],
     "name": "getStats",
     "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
       {
         "internalType": "uint256",
         "name": "",

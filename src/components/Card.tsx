@@ -3,8 +3,7 @@
 import { useState } from "react"
 
 interface CardData {
-  svg: string
-  description: string
+  metadata: string
 }
 
 interface CardProps {
@@ -12,7 +11,8 @@ interface CardProps {
   showBackDefault?: boolean
   disableFlip?: boolean
   forceShowFront?: boolean // New prop to force front display
-    scaleIfHover?: boolean 
+  scaleIfHover?: boolean
+  showCardStats?: boolean
 }
 
 export default function Card({
@@ -21,35 +21,45 @@ export default function Card({
   disableFlip = false,
   forceShowFront = false,
   scaleIfHover = true,
+  showCardStats = false
 }: CardProps) {
   const [isFlipped, setIsFlipped] = useState(showBackDefault && !forceShowFront)
 
+  // Extract SVG image from metadata (base64 or data URI)
   const getImageSrc = () => {
-    if (cardData.svg.startsWith("<svg")) {
-      const encodedSvg = encodeURIComponent(cardData.svg)
-      return `data:image/svg+xml,${encodedSvg}`
+    try {
+      const meta = JSON.parse(cardData.metadata)
+      // meta.image is a data URI: data:image/svg+xml;base64,...
+      return meta.image || "/placeholder.svg"
+    } catch (e) {
+      return "/placeholder.svg"
     }
-    return cardData.svg
   }
 
-  // Parse the JSON description and extract card title
+  // Parse the JSON metadata and extract card title
   const getCardTitle = (): string => {
     try {
-      const traits = JSON.parse(cardData.description)
-      const cardTrait = traits.find((trait: any) => trait.trait_type === "Card")
+     // console.log("Card metadata:", cardData.metadata)
+      const meta = JSON.parse(cardData.metadata)
+      const attributes = meta.attributes || []
+      const cardTrait = attributes.find((trait: any) => trait.trait_type === "Card")
       return cardTrait ? cardTrait.value : "Unknown Card"
     } catch (error) {
-      console.error("Error parsing card description:", error)
+      console.error("Error parsing card metadata:", error)
       return "Unknown Card"
     }
   }
 
-  // Parse the JSON description and extract Color and Rarity
+  // Parse the JSON metadata and extract Color, Rarity, Attack, HP, Defense
   const getCardDetails = (): string => {
     try {
-      const traits = JSON.parse(cardData.description)
-      const colorTrait = traits.find((trait: any) => trait.trait_type === "Color")
-      const rarityTrait = traits.find((trait: any) => trait.trait_type === "Rarity")
+      const meta = JSON.parse(cardData.metadata)
+      const attributes = meta.attributes || []
+      const colorTrait = attributes.find((trait: any) => trait.trait_type === "Color")
+      const rarityTrait = attributes.find((trait: any) => trait.trait_type === "Rarity")
+      const attackTrait = attributes.find((trait: any) => trait.trait_type === "Attack")
+      const hpTrait = attributes.find((trait: any) => trait.trait_type === "HP")
+      const defenseTrait = attributes.find((trait: any) => trait.trait_type === "Defense")
 
       const details = []
       if (colorTrait) {
@@ -58,11 +68,17 @@ export default function Card({
           : colorTrait.value
         details.push(`Color: ${colorValue}`)
       }
-      if (rarityTrait) details.push(`Rarity: ${rarityTrait.value}`)
+        if (rarityTrait) details.push(`Rarity: ${rarityTrait.value}`)
+
+      if(showCardStats) {
+        if (attackTrait) details.push(`Attack: ${attackTrait.value}`)
+        if (hpTrait) details.push(`HP: ${hpTrait.value}`)
+        if (defenseTrait) details.push(`Defense: ${defenseTrait.value}`)
+      }
 
       return details.join("\n")
     } catch (error) {
-      console.error("Error parsing card description:", error)
+      console.error("Error parsing card metadata:", error)
       return "No details available"
     }
   }
@@ -145,15 +161,6 @@ export default function Card({
         }
         .rotate-y-180 {
           transform: rotateY(180deg);
-        }
-
-        @font-face {
-            font-family: 'PokemonGB';
-            src: url('/fonts/PokemonGb-RAeo.ttf') format('truetype');
-        }
-        
-        .font-mono {
-            font-family: 'PokemonGB', monospace;
         }
 
         .pixelated {

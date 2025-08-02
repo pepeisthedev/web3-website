@@ -647,15 +647,7 @@ export default function Eggs() {
                     image-rendering: pixelated;
                     image-rendering: crisp-edges;
                 }
-                
-                @font-face {
-                    font-family: 'GameBoy';
-                    src: url('/fonts/gameboy.woff2') format('woff2');
-                }
-                
-                .font-mono {
-                    font-family: 'GameBoy', monospace;
-                }
+
             `}</style>
         </div>
     )

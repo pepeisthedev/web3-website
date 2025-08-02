@@ -216,16 +216,6 @@ export default function NavBar({ setCurrentView, currentView }: NavBarProps) {
                 </div>
             </div>
 
-            <style>{`
-                @font-face {
-                    font-family: 'PokemonGB';
-                    src: url('/fonts/PokemonGb-RAeo.ttf') format('truetype');
-                }
-                
-                .font-mono {
-                    font-family: 'PokemonGB', monospace;
-                }
-            `}</style>
         </nav>
     )
 }

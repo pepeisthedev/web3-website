@@ -263,14 +263,6 @@ export default function MintPage() {
             </div>
 
             <style>{`
-                @font-face {
-                    font-family: 'PokemonGB';
-                    src: url('/fonts/PokemonGb-RAeo.ttf') format('truetype');
-                }
-                
-                .font-mono {
-                    font-family: 'PokemonGB', monospace;
-                }
 
                 .pixelated {
                     image-rendering: pixelated;

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+// ...existing code...
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react"
 import { ethers } from "ethers"
 import Card from "./Card"
@@ -9,20 +10,23 @@ import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Checkbox } from "./ui/checkbox"
 
+import { fetchAllUserCards } from "../lib/fetchAllUserCards"
+
 // Contract addresses and ABIs
 import cardContractABI from "../assets/abi/Bead151Card.json"
 import candyContractABI from "../assets/abi/Bead151Candy.json"
 import characterStatsContractABI from "../assets/abi/Bead151CharacterStats.json"
+import cardArtSvgRouterContractABI from "../assets/abi/Bead151ArtRouter.json"
 
 const cardContractAddress = import.meta.env.VITE_BEAD151_CARD_CONTRACT
 const candyContractAddress = import.meta.env.VITE_BEAD151_CANDY_CONTRACT
 const characterStatsContractAddress = import.meta.env.VITE_BEAD151_CHARACTER_STATS_CONTRACT
+const svgContractAddress = import.meta.env.VITE_BEAD151_CARD_ART_CONTRACT
 
 interface CardData {
     tokenId: number
     cardId: number
-    svg: string
-    description: string
+    metadata: string 
 }
 
 interface CollectionCard extends CardData {
@@ -77,7 +81,7 @@ export default function CollectionPage() {
     const [showEvolveModal, setShowEvolveModal] = useState<boolean>(false)
     const [showEvolutionResultModal, setShowEvolutionResultModal] = useState<boolean>(false)
     const [evolvedCardId, setEvolvedCardId] = useState<number>(0)
-    const [evolvedCardData, setEvolvedCardData] = useState<{ svg: string, description: string } | null>(null)
+    const [evolvedCardData, setEvolvedCardData] = useState<{ svg: string } | null>(null)
     const [showCongratulationsModal, setShowCongratulationsModal] = useState<boolean>(false)
     const [candiesReceived, setCandiesReceived] = useState<number>(0)
     const [isLoadingCandy, setIsLoadingCandy] = useState<boolean>(false)
@@ -100,13 +104,23 @@ export default function CollectionPage() {
         setShowOnlyDuplicates(false)
     }
 
-    const getImageSrc = (cardData: CardData) => {
-        if (cardData.svg.startsWith("<svg")) {
-            const encodedSvg = encodeURIComponent(cardData.svg)
+    const getImageSrc = (svg: string) => {
+        if (svg.startsWith("<svg")) {
+            const encodedSvg = encodeURIComponent(svg)
             return `data:image/svg+xml,${encodedSvg}`
         }
-        return cardData.svg
+        return svg
     }
+
+      const getImageSrcFromMetadata = (metadata: string) => {
+            try {
+            const meta = JSON.parse(metadata)
+            // meta.image is a data URI: data:image/svg+xml;base64,...
+            return meta.image || "/placeholder.svg"
+            } catch (e) {
+            return "/placeholder.svg"
+            }
+        }
 
     const fetchCandyData = async () => {
         if (!walletProvider || !address) return
@@ -184,22 +198,22 @@ export default function CollectionPage() {
         return 'EVOLVE'
     }
 
-    const getCardDataById = async (cardId: number): Promise<{ svg: string, description: string } | null> => {
+    // Fetches SVG from the svgContract and metadata from the user's collection (already loaded)
+    const getCardDataById = async (cardId: number): Promise<{ svg: string } | null> => {
         try {
-            const response = await fetch(`/metadata/dex/card-${cardId.toString().padStart(3, '0')}.json`)
-            if (!response.ok) {
-                throw new Error(`Failed to load metadata for card ${cardId}`)
-            }
-            
-            const metadata = await response.json()
-            console.log(`Loaded metadata for card ${cardId}:`, metadata)
-            
+            // Dynamically import ABI if not already imported
+            const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
+            const svgContract = new ethers.Contract(svgContractAddress, cardArtSvgRouterContractABI, ethersProvider)
+
+            // Fetch SVG from contract
+            console.log("Fetching SVG for card ID:", cardId)
+            const svg = await svgContract.render(cardId)
+
             return {
-                svg: `/images/dex/svgs/card-${cardId.toString().padStart(3, '0')}.svg`,
-                description: JSON.stringify(metadata)
+                svg
             }
         } catch (error) {
-            console.error(`Error loading metadata for card ${cardId}:`, error)
+            console.error(`Error loading SVG/metadata for card ${cardId}:`, error)
             return null
         }
     }
@@ -285,80 +299,16 @@ export default function CollectionPage() {
         }
     }
 
-    const fetchAllUserCards = async (userAddress: string): Promise<CardData[]> => {
-        console.log("🔍 Fetching user collection for address:", userAddress)
-
-        if (!walletProvider || !userAddress) {
-            console.log("❌ No wallet provider or address")
-            return []
-        }
-
-        const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
-        const cardContract = new ethers.Contract(cardContractAddress, cardContractABI, ethersProvider)
-
-        try {
-            console.log("📋 Getting user cards from contract...")
-            const [tokenIds, cardIds] = await cardContract.getUserCards(userAddress)
-            // console.log("✅ User cards fetched:", { tokenIds: tokenIds, cardIds: cardIds })
-
-            if (cardIds.length === 0) {
-                console.log("📭 User has no cards")
-                return []
-            }
-
-            const cardIdsArray = Array.from(cardIds).map(id => Number(id))
-            const tokenIdsArray = Array.from(tokenIds).map(id => Number(id))
-
-            console.log("🔄 Converted arrays:", { tokenIdsArray, cardIdsArray })
-
-            console.log("🎴 Loading card data from static files...")
-            const allCardData: CardData[] = await Promise.all(
-                cardIdsArray.map(async (cardId: number, index: number) => {
-                    try {
-                        const response = await fetch(`/metadata/dex/card-${cardId.toString().padStart(3, '0')}.json`)
-                        let description = `Card #${cardId}`
-                        
-                        if (response.ok) {
-                            const metadata = await response.json()
-                            description = JSON.stringify(metadata)
-                        } else {
-                            console.warn(`Failed to load metadata for card ${cardId}`)
-                        }
-
-                        return {
-                            tokenId: tokenIdsArray[index],
-                            cardId: cardId,
-                            svg: `/images/dex/svgs/card-${cardId.toString().padStart(3, '0')}.svg`,
-                            description: description,
-                        }
-                    } catch (error) {
-                        console.warn(`Error loading metadata for card ${cardId}:`, error)
-                        return {
-                            tokenId: tokenIdsArray[index],
-                            cardId: cardId,
-                            svg: `/images/dex/svgs/card-${cardId.toString().padStart(3, '0')}.svg`,
-                            description: `Card #${cardId}`,
-                        }
-                    }
-                })
-            )
-            console.log("✅ Card data loaded from static files")
-
-            console.log("🎯 Collection processed:", allCardData.length, "cards")
-            return allCardData
-
-        } catch (error) {
-            console.error('❌ Error fetching all user cards:', error)
-            return []
-        }
-    }
 
     const fetchUserCollection = async () => {
         if (!address) return
 
         setIsLoading(true)
         try {
-            const cards = await fetchAllUserCards(address)
+            const cards = await fetchAllUserCards(
+                address,
+                walletProvider
+            )
             setAllCards(cards)
             processCollectionCards(cards)
         } catch (error) {
@@ -385,20 +335,23 @@ export default function CollectionPage() {
         setCollectionCards(allCardsWithCount)
     }
 
-    const getRarityValue = (description: string): string => {
+    // New: get rarity and card title from metadata JSON
+    const getRarityValue = (metadata: string): string => {
         try {
-            const traits = JSON.parse(description)
-            const rarityTrait = traits.find((trait: any) => trait.trait_type === "Rarity")
+            const meta = JSON.parse(metadata)
+            const attributes = meta.attributes || []
+            const rarityTrait = attributes.find((trait: any) => trait.trait_type === "Rarity")
             return rarityTrait ? rarityTrait.value : "Unknown"
         } catch {
             return "Unknown"
         }
     }
 
-    const getCardTitle = (description: string, cardId: number): string => {
+    const getCardTitle = (metadata: string, cardId: number): string => {
         try {
-            const traits = JSON.parse(description)
-            const cardTrait = traits.find((trait: any) => trait.trait_type === "Card")
+            const meta = JSON.parse(metadata)
+            const attributes = meta.attributes || []
+            const cardTrait = attributes.find((trait: any) => trait.trait_type === "Card")
             return cardTrait ? cardTrait.value : `Card #${cardId}`
         } catch {
             return `Card #${cardId}`
@@ -412,14 +365,15 @@ export default function CollectionPage() {
     const filteredAndSortedCards = (() => {
         let cards = collectionCards
 
-        // Filter by search term (including description search)
+        // Filter by search term (including metadata search)
         if (searchTerm) {
             cards = cards.filter(card => {
                 try {
-                    const traits = JSON.parse(card.description)
-                    const cardTitle = getCardTitle(card.description, card.cardId)
-                    const rarity = getRarityValue(card.description)
-                    const colorTrait = traits.find((trait: any) => trait.trait_type === "Color")
+                    const meta = JSON.parse(card.metadata)
+                    const attributes = meta.attributes || []
+                    const cardTitle = getCardTitle(card.metadata, card.cardId)
+                    const rarity = getRarityValue(card.metadata)
+                    const colorTrait = attributes.find((trait: any) => trait.trait_type === "Color")
                     const color = colorTrait ? colorTrait.value : ""
 
                     const searchLower = searchTerm.toLowerCase()
@@ -427,7 +381,7 @@ export default function CollectionPage() {
                         rarity.toLowerCase().includes(searchLower) ||
                         color.toLowerCase().includes(searchLower) ||
                         card.cardId.toString().includes(searchTerm) ||
-                        card.description.toLowerCase().includes(searchLower)
+                        card.metadata.toLowerCase().includes(searchLower)
                 } catch {
                     return card.cardId.toString().includes(searchTerm)
                 }
@@ -441,7 +395,7 @@ export default function CollectionPage() {
 
         if (activeRarities.length < 4) { // Only filter if not all rarities are selected
             cards = cards.filter(card => {
-                const rarity = getRarityValue(card.description)
+                const rarity = getRarityValue(card.metadata)
                 return activeRarities.includes(rarity)
             })
         }
@@ -480,8 +434,8 @@ export default function CollectionPage() {
                     : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6'
             case 'dex':
                 return isSideBySide
-                    ? 'grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-1'
-                    : 'grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-14 2xl:grid-cols-16'
+                    ? 'grid grid-cols-6 sm:grid-cols-6 md:grid-cols-6 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-12 gap-1'
+                    : 'grid grid-cols-4 sm:grid-cols-6 md:grid-cols-6 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10'
             case 'list':
                 return 'space-y-4'
             default:
@@ -594,15 +548,7 @@ export default function CollectionPage() {
                                     {/* Card Info */}
                                     <div className="text-center text-cyan-300 font-mono">
                                         <h3 className="text-xl font-bold mb-2">
-                                            {selectedCard ? (() => {
-                                                try {
-                                                    const traits = JSON.parse(selectedCard.description)
-                                                    const cardTrait = traits.find((trait: any) => trait.trait_type === "Card")
-                                                    return cardTrait ? cardTrait.value : `Card #${selectedCard.cardId}`
-                                                } catch {
-                                                    return `Card #${selectedCard.cardId}`
-                                                }
-                                            })() : "No Card Selected"}
+                                            {selectedCard ? getCardTitle(selectedCard.metadata, selectedCard.cardId) : "No Card Selected"}
                                         </h3>
 
                                         {selectedCard ? (
@@ -769,7 +715,7 @@ export default function CollectionPage() {
                                                             {/* Card Image */}
                                                             <div className="w-full h-full flex items-center justify-center p-1">
                                                                 <img
-                                                                    src={getImageSrc(card)}
+                                                                    src={getImageSrcFromMetadata(card.metadata)}
                                                                     alt={card.cardId.toString()}
                                                                     className={`
                                                                             max-w-full max-h-full object-contain transition-all duration-300 pixelated
@@ -935,7 +881,7 @@ export default function CollectionPage() {
                                         <div className="text-cyan-300 font-mono mb-2 text-xs sm:text-sm">CURRENT</div>
                                         <div className="w-30 h-30 sm:w-38 sm:h-38 mb-2 bg-black border-2 border-yellow-300 rounded-lg overflow-hidden">
                                             <img
-                                                src={getImageSrc(selectedCard)}
+                                                src={getImageSrcFromMetadata(selectedCard.metadata)}
                                                 alt={`Card ${selectedCard.cardId}`}
                                                 className="w-full h-full object-contain pixelated"
                                                 onError={(e) => {
@@ -959,7 +905,7 @@ export default function CollectionPage() {
                                         <div className="w-30 h-30 sm:w-38 sm:h-38 mb-2 bg-black border-2 border-purple-400 rounded-lg overflow-hidden">
                                             {evolvedCardData ? (
                                                 <img
-                                                    src={evolvedCardData.svg}
+                                                    src={getImageSrc(evolvedCardData.svg)}
                                                     alt={`Card ${getNextEvolutionCardId(selectedCard.cardId)}`}
                                                     className="w-full h-full object-contain pixelated"
                                                     onError={(e) => {
@@ -1040,7 +986,7 @@ export default function CollectionPage() {
                                     <div className="w-32 h-32 sm:w-48 sm:h-48 bg-black border-4 border-purple-400 rounded-lg overflow-hidden">
                                         {evolvedCardData ? (
                                             <img
-                                                src={evolvedCardData.svg}
+                                                src={getImageSrc(evolvedCardData.svg)}
                                                 alt={`Evolved Card ${evolvedCardId}`}
                                                 className="w-full h-full object-contain pixelated"
                                                 onError={(e) => {
@@ -1166,15 +1112,7 @@ export default function CollectionPage() {
                     image-rendering: pixelated;
                     image-rendering: crisp-edges;
                 }
-                
-                @font-face {
-                    font-family: 'PokemonGB';
-                    src: url('/fonts/PokemonGb-RAeo.ttf') format('truetype');
-                }
-                
-                .font-mono {
-                    font-family: 'PokemonGB', monospace;
-                }
+
                 
                 /* Custom select styling for retro look */
                 select {

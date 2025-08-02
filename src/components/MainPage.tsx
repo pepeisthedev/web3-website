@@ -43,6 +43,16 @@ export default function MainPage(): React.JSX.Element {
                     <Eggs />
                 )}
             </div>
+                        <style>{`
+                @font-face {
+                    font-family: 'GameBoy';
+                    src: url('/fonts/gameboy.woff2') format('woff2');
+                }
+                
+                .font-mono {
+                    font-family: 'GameBoy', monospace;
+                }
+            `}</style>
         </>
     )
 }

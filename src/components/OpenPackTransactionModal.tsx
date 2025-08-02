@@ -6,8 +6,7 @@ import { X, Loader2 } from "lucide-react"
 import Card from "./Card"
 
 interface CardData {
-  svg: string
-  description: string
+  metadata: string
 }
 
 interface TransactionModalProps {
@@ -18,7 +17,7 @@ interface TransactionModalProps {
   completedText: string
   initImage: string
   onConfirm: () => Promise<void>
-  extractedCards?: CardData[]
+  extractedCards?: CardData[]|undefined
   onOpenAnother?: () => Promise<void>
 }
 
@@ -189,13 +188,7 @@ export default function OpenPackTransactionModal({
         )}
 
         <style>{`
-          @font-face {
-              font-family: 'PokemonGB';
-              src: url('/fonts/PokemonGb-RAeo.ttf') format('truetype');
-          }
-          .font-mono {
-              font-family: 'PokemonGB', monospace;
-          }
+
           .pixelated {
               image-rendering: pixelated;
               image-rendering: -moz-crisp-edges;

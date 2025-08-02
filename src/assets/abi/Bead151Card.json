@@ -739,6 +739,35 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getStatsForToken",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "attack",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "hp",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "defense",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getTransferValidationFunction",
     "outputs": [
@@ -1111,6 +1140,35 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "statsOf",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "attack",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "hp",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "defense",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes4",
         "name": "interfaceId",
         "type": "bytes4"
@@ -1154,6 +1212,25 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "tokenIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "tokenURIs",
+    "outputs": [
+      {
+        "internalType": "string[]",
+        "name": "uris",
+        "type": "string[]"
       }
     ],
     "stateMutability": "view",

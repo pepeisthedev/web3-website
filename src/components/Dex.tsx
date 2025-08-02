@@ -6,20 +6,15 @@ import { ethers } from "ethers"
 import { Loader2, Eye, EyeOff } from "lucide-react"
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
-import Card from "./Card" 
-
-// Contract addresses and ABIs
+import Card from "./Card"
 import cardContractABI from "../assets/abi/Bead151Card.json"
-import routerContractABI from "../assets/abi/Bead151ArtRouter.json"
 
 const cardContractAddress = import.meta.env.VITE_BEAD151_CARD_CONTRACT
-const routerContractAddress = import.meta.env.VITE_BEAD151_CARD_ART_CONTRACT
 
 interface CardData {
     tokenId: number
     cardId: number
     svg: string
-    description: string
 }
 
 interface DexEntry {
@@ -27,13 +22,12 @@ interface DexEntry {
     imageUrl: string
     owned: boolean
     cardName?: string
-    rarity?: string
 }
 
 export default function Dex() {
     const { address, isConnected } = useAppKitAccount()
     const { walletProvider } = useAppKitProvider("eip155")
- const [selectedCardData, setSelectedCardData] = useState<CardData | null>(null)
+    const [selectedCardData, setSelectedCardData] = useState<CardData | null>(null)
     const [dexEntries, setDexEntries] = useState<DexEntry[]>([])
     const [ownedCards, setOwnedCards] = useState<Set<number>>(new Set())
     const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -66,97 +60,69 @@ export default function Dex() {
         setDexEntries(entries)
     }
 
-    const loadCardMetadata = async (cardId: number): Promise<CardData | null> => {
-        try {
-            const response = await fetch(`/metadata/dex/card-${cardId.toString().padStart(3, '0')}.json`)
-            if (!response.ok) {
-                throw new Error(`Failed to load metadata for card ${cardId}`)
-            }
-            
-            const metadata = await response.json()
-            console.log(`Loaded metadata for card ${cardId}:`, metadata)
-            
-            // Create CardData object
-            const cardData: CardData = {
-                tokenId: 0, // Not applicable for DEX view
-                cardId: cardId,
-                svg: `/images/dex/svgs/card-${cardId.toString().padStart(3, '0')}.svg`,
-                description: JSON.stringify(metadata)
-            }
-            
-            return cardData
-        } catch (error) {
-            console.error(`Error loading metadata for card ${cardId}:`, error)
-            return null
+    async function fetchAllUserCards(
+        userAddress: string,
+        walletProvider: any,
+    ): Promise<CardData[]> {
+        console.log("🔍 Fetching user collection for address:", userAddress)
+
+        if (!walletProvider || !userAddress) {
+            console.log("❌ No wallet provider or address")
+            return []
         }
-    }
-
-
-    const fetchAllUserCards = async (userAddress: string): Promise<CardData[]> => {
-        if (!walletProvider || !userAddress) return []
 
         const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
         const cardContract = new ethers.Contract(cardContractAddress, cardContractABI, ethersProvider)
-        const routerContract = new ethers.Contract(routerContractAddress, routerContractABI, ethersProvider)
-        
+
         try {
+            console.log("📋 Getting user cards from contract...")
             const [tokenIds, cardIds] = await cardContract.getUserCards(userAddress)
-            
-            if (cardIds.length === 0) return []
 
-            const cardIdsArray = Array.from(cardIds).map(id => Number(id))
-            const tokenIdsArray = Array.from(tokenIds).map(id => Number(id))
-            
-            const [svgs, metadata] = await routerContract.renderAndMetaBatch(cardIdsArray)
+            if (cardIds.length === 0) {
+                console.log("📭 User has no cards")
+                return []
+            }
 
-            const allCardData: CardData[] = cardIdsArray.map((cardId: number, index: number) => ({
+            const cardIdsArray = Array.from(cardIds).map((id: any) => Number(id))
+            const tokenIdsArray = Array.from(tokenIds).map((id: any) => Number(id))
+
+
+            const allCardData: CardData[] = cardIdsArray.map((cardId: number, index: number) => {
+                return {
                 tokenId: tokenIdsArray[index],
                 cardId: cardId,
-                svg: svgs[index] || "",
-                description: metadata[index] || `Card #${cardId}`,
-            }))
+                svg: `/images/dex/svgs/card-${cardId.toString().padStart(3, '0')}.svg`,
+                }
+            })
 
+            
+            console.log("✅ Card data loaded from contract metadata")
+            console.log("🎯 Collection processed:", allCardData.length, "cards")
             return allCardData
         } catch (error) {
-            console.error('Error fetching user cards:', error)
+            console.error('❌ Error fetching all user cards:', error)
             return []
         }
     }
 
     const fetchUserCollection = async () => {
         if (!address) return
-        
+
         setIsLoading(true)
         try {
-            const cards = await fetchAllUserCards(address)
+            const cards = await fetchAllUserCards(address, walletProvider)
             const ownedCardIds = new Set(cards.map(card => card.cardId))
             setOwnedCards(ownedCardIds)
-            
+
             // Update dex entries with ownership info and card details
-            setDexEntries(prevEntries => 
+            setDexEntries(prevEntries =>
                 prevEntries.map(entry => {
-                    const userCard = cards.find(card => card.cardId === entry.cardId)
                     let cardName = `Card #${entry.cardId}`
-                    let rarity = "Unknown"
-                    
-                    if (userCard) {
-                        try {
-                            const traits = JSON.parse(userCard.description)
-                            const cardTrait = traits.find((trait: any) => trait.trait_type === "Card")
-                            const rarityTrait = traits.find((trait: any) => trait.trait_type === "Rarity")
-                            
-                            if (cardTrait) cardName = cardTrait.value
-                            if (rarityTrait) rarity = rarityTrait.value
-                        } catch (error) {
-                            console.error("Error parsing card description:", error)
-                        }
-                    }
-                    
+
                     return {
                         ...entry,
                         owned: ownedCardIds.has(entry.cardId),
                         cardName,
-                        rarity: ownedCardIds.has(entry.cardId) ? rarity : undefined
                     }
                 })
             )
@@ -166,7 +132,7 @@ export default function Dex() {
         setIsLoading(false)
     }
 
-    const filteredEntries = hideNotOwned 
+    const filteredEntries = hideNotOwned
         ? dexEntries.filter(entry => entry.owned)
         : dexEntries
 
@@ -176,22 +142,12 @@ export default function Dex() {
 
     const handleCardClick = async (entry: DexEntry) => {
         setSelectedCard(entry)
-        
+
         // Load the full card data for the Card component
-        const cardData = await loadCardMetadata(entry.cardId)
-        setSelectedCardData(cardData)
+       // const cardData = await loadAllCardImages(entry.cardId)
+       // setSelectedCardData(cardData)
     }
 
-    const getRarityColor = (rarity?: string) => {
-        switch (rarity?.toLowerCase()) {
-            case 'common': return 'text-gray-400'
-            case 'uncommon': return 'text-green-400'
-            case 'rare': return 'text-blue-400'
-            case 'epic': return 'text-purple-400'
-            case 'legendary': return 'text-yellow-400'
-            default: return 'text-gray-400'
-        }
-    }
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-teal-900 via-cyan-800 to-teal-900 pt-20 xl:pt-30 px-4 font-mono">
@@ -200,14 +156,14 @@ export default function Dex() {
                 <div className="text-center mb-8">
                     <h1 className="text-4xl md:text-5xl font-bold text-yellow-300 mb-4 font-mono tracking-wider">BEAD151 DEX</h1>
                     <p className="text-xl text-cyan-300 font-mono">COMPLETE CARD DATABASE</p>
-                    
+
                     {isConnected && (
                         <div className="mt-6 bg-black border-4 border-yellow-300 rounded-lg p-4 max-w-md mx-auto">
                             <div className="text-2xl font-bold text-green-400 mb-2 font-mono">
-                                {ownedCount.toString().padStart(3, '0')}/151 ({completionPercentage}%)
+                                {ownedCount.toString().padStart(3, '0')}/151 {completionPercentage}%
                             </div>
                             <div className="w-full bg-gray-600 border-2 border-gray-400 rounded h-6 overflow-hidden">
-                                <div 
+                                <div
                                     className="bg-green-400 h-full transition-all duration-500"
                                     style={{ width: `${completionPercentage}%` }}
                                 />
@@ -232,7 +188,7 @@ export default function Dex() {
                                     HIDE NOT OWNED
                                 </label>
                             </div>
-                            
+
                             {!isConnected && (
                                 <p className="text-green-400 text-sm font-mono">CONNECT WALLET TO VIEW COLLECTION</p>
                             )}
@@ -258,19 +214,18 @@ export default function Dex() {
                             onClick={() => handleCardClick(entry)}
                             className={`
                                 relative aspect-square rounded border-2 overflow-hidden transition-all duration-300 hover:scale-105 cursor-pointer 
-                                ${entry.owned 
-                                    ? 'bg-black border-yellow-300 shadow-lg hover:border-cyan-300' 
+                                ${entry.owned
+                                    ? 'bg-black border-yellow-300 shadow-lg hover:border-cyan-300'
                                     : 'bg-gray-600 border-gray-400'
                                 }
                             `}
                         >
                             {/* Card Number */}
                             <div className="absolute top-1 left-1 z-10">
-                                <span className={`text-xs font-bold px-1 py-0.5 border rounded font-mono ${
-                                    entry.owned 
-                                        ? 'bg-green-400 text-black border-green-400' 
+                                <span className={`text-xs font-bold px-1 py-0.5 border rounded font-mono ${entry.owned
+                                        ? 'bg-green-400 text-black border-green-400'
                                         : 'bg-gray-500 text-gray-300 border-gray-500'
-                                }`}>
+                                    }`}>
                                     {entry.cardId.toString().padStart(3, '0')}
                                 </span>
                             </div>
@@ -304,11 +259,11 @@ export default function Dex() {
                 )}
             </div>
 
-            
-            
+
+
             {/* Card Detail Modal */}
             {selectedCard && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
                     onClick={() => {
                         setSelectedCard(null)
@@ -316,15 +271,18 @@ export default function Dex() {
                     }}
                 >
                     {/* Card Component */}
-                    {selectedCardData ? (
+                    {selectedCard ? (
                         <div className="flex flex-col items-center space-y-6">
                             <div className="transform scale-[2] sm:scale-[2] md:scale-150">
-                                <Card 
-                                    cardData={selectedCardData}
-                                    showBackDefault={false}
-                                    disableFlip={false}
-                                    forceShowFront={false}
-                                    scaleIfHover={false}
+                                <img
+                                    src={selectedCard.imageUrl.startsWith('<svg')
+                                        ? `data:image/svg+xml,${encodeURIComponent(selectedCard.imageUrl)}`
+                                        : selectedCard.imageUrl}
+                                    alt={`Card ${selectedCard.cardId}`}
+                                    className="w-48 h-64 object-contain pixelated border-4 border-grey-700 bg-black rounded-lg"
+                                    onError={e => {
+                                        (e.target as HTMLImageElement).src = '/placeholder.svg'
+                                    }}
                                 />
                             </div>
                         </div>
@@ -336,8 +294,8 @@ export default function Dex() {
                     )}
                 </div>
             )}
-            
-            
+
+
             {/* Custom CSS for responsive grid */}
             <style>{`
                 @media (min-width: 1280px) {
@@ -346,14 +304,7 @@ export default function Dex() {
                     }
                 }
 
-                @font-face {
-                    font-family: 'PokemonGB';
-                    src: url('/fonts/PokemonGb-RAeo.ttf') format('truetype');
-                }
-                
-                .font-mono {
-                    font-family: 'PokemonGB', monospace;
-                }
+
 
                 .pixelated {
                     image-rendering: pixelated;

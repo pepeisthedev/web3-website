@@ -4,19 +4,15 @@ import { useState, useEffect } from "react"
 import { useAppKit, useAppKitAccount, useAppKitProvider } from "@reown/appkit/react"
 import { ethers } from "ethers"
 import { Button } from "./ui/button"
-import { Sparkles, Star, Zap } from "lucide-react"
 import OpenPackTransactionModal from "./OpenPackTransactionModal"
 import packContractAbi from "../assets/abi/Bead151Pack.json"
 import cardContractAbi from "../assets/abi/Bead151Card.json"
-import cardArtSvgRouterContractABI from "../assets/abi/Bead151ArtRouter.json"
 
 const packsContractAddress = import.meta.env.VITE_BEAD151_CARD_PACK_CONTRACT
-const svgContractAddress = import.meta.env.VITE_BEAD151_CARD_ART_CONTRACT
 const cardContractAddress = import.meta.env.VITE_BEAD151_CARD_CONTRACT
 
 interface CardData {
-    svg: string
-    description: string
+    metadata: string
 }
 
 export default function OpenPackPage() {
@@ -26,7 +22,7 @@ export default function OpenPackPage() {
 
     const [packCount, setPackCount] = useState<number>(0)
     const [showModal, setShowModal] = useState<boolean>(false)
-    const [extractedCards, setExtractedCards] = useState<CardData[]>([])
+    const [extractedCards, setExtractedCards] = useState<CardData[]|undefined>([])
     const [isHovering, setIsHovering] = useState<boolean>(false)
     const [packGlow, setPackGlow] = useState<boolean>(false)
 
@@ -58,38 +54,35 @@ export default function OpenPackPage() {
         }
     }
 
-    const fetchCardData = async (cardIds: number[]): Promise<CardData[]> => {
-        if (!walletProvider) return []
+    // Helper to decode base64 data:application/json;base64,...
+    function decodeBase64Json(dataUri: string): string {
+        if (!dataUri.startsWith('data:application/json;base64,')) return dataUri
+        try {
+            const base64 = dataUri.replace('data:application/json;base64,', '')
+            const json = atob(base64)
+            return json
+        } catch (e) {
+            return dataUri
+        }
+    }
+
+    const fetchCardData = async (tokenIds: number[], cardIds: number[]): Promise<CardData[] | undefined> => {
+        if (!walletProvider) return
 
         const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
-        const svgContract = new ethers.Contract(svgContractAddress, cardArtSvgRouterContractABI, ethersProvider)
+        const cardContract = new ethers.Contract(cardContractAddress, cardContractAbi, ethersProvider)
         try {
             // Fetch all SVGs and metadata in a single call
-            const [svgs, metadataArray] = await svgContract.renderAndMetaBatch(cardIds)
+            //console.log("Fetching card data for tokenIds:", tokenIds)
+            const metadataArray = await cardContract.tokenURIs(tokenIds)
+           // console.log("Fetched metadata:", metadataArray[0])
 
-            // Map the results back to CardData format
-            return cardIds.map((cardId, index) => ({
-                svg: svgs[index] || "",
-                description: metadataArray[index] || `Card #${cardId}`,
+            // Map the results back to CardData format, decoding base64 JSON if needed
+            return metadataArray.map((item: string) => ({
+                metadata: decodeBase64Json(item),
             }))
         } catch (error) {
             console.error('Error fetching batch card data:', error)
-
-            // Fallback to individual calls if batch fails
-            const cardDataPromises = cardIds.map(async (cardId) => {
-                try {
-                    const [svg, meta] = await Promise.all([
-                        svgContract.render(cardId),
-                        svgContract.meta(cardId)
-                    ])
-                    return { svg, description: meta }
-                } catch (error) {
-                    console.error(`Error fetching card ${cardId}:`, error)
-                    return { svg: "", description: `Card #${cardId}` }
-                }
-            })
-
-            return Promise.all(cardDataPromises)
         }
     }
 
@@ -108,11 +101,13 @@ export default function OpenPackPage() {
         const receipt = await tx.wait()
 
         // Parse events to get card IDs
+        let tokenIds: number[] = []
         let cardIds: number[] = []
         receipt.logs.forEach((log: any) => {
             try {
                 const parsedLog = cardContract.interface.parseLog(log)
                 if (parsedLog?.name === "PackOpened") {
+                    tokenIds = parsedLog.args[1].map((id: any) => Number(id))
                     cardIds = parsedLog.args[2].map((id: any) => Number(id))
                 }
             } catch (e) {
@@ -120,7 +115,7 @@ export default function OpenPackPage() {
             }
         })
 
-        const cardData = await fetchCardData(cardIds)
+        const cardData = await fetchCardData(tokenIds, cardIds)
         setExtractedCards(cardData)
         await fetchPackCount()
     }
@@ -264,14 +259,7 @@ export default function OpenPackPage() {
           animation: float 6s ease-in-out infinite;
         }
 
-      @font-face {
-                    font-family: 'GameBoy';
-                    src: url('/fonts/gameboy.woff2') format('woff2');
-                }
-                
-                .font-mono {
-                    font-family: 'GameBoy', monospace;
-                }
+
       `}</style>
         </div>
     )
