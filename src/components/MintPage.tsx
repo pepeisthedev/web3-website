@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -16,32 +17,96 @@ export default function MintPage() {
     const { walletProvider } = useAppKitProvider("eip155")
 
     const [packPrice, setPackPrice] = useState<string>("0")
+    const [publicPackPrice, setPublicPackPrice] = useState<string>("0")
     const [quantity, setQuantity] = useState<number>(1)
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [showModal, setShowModal] = useState<boolean>(false)
     const [freeMints, setFreeMints] = useState<number>(0)
+        // New contract state
+    const [totalMinted, setTotalMinted] = useState<number>(0)
+    const [maxPacks, setMaxPacks] = useState<number>(0)
+    const [whitelistMints, setWhitelistMints] = useState<number>(0)
+    const [mintEnabled, setMintEnabled] = useState<boolean>(false)
+    const [publicMintEnabled, setPublicMintEnabled] = useState<boolean>(false)
+    const [whitelistPrice, setWhitelistPrice] = useState<string>("0")
+
 
     // Fetch pack price from contract
     useEffect(() => {
-        fetchPackPrice()
         if (isConnected) {
+            fetchPackPrice()
+            fetchMintState()
             fetchFreeMints()
+            fetchWhitelistMints()
         }
     }, [isConnected])
+    // Fetch contract state for mint phase and stats
+    const fetchMintState = async () => {
+        try {
+            if (!walletProvider) return
+            const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
+            const contract = new ethers.Contract(packContractAddress, packContractAbi, ethersProvider)
+            const mintEnabledVal = await contract.isMintEnabled()
+            console.log("Mint enabled:", mintEnabledVal)
+            const [publicMintEnabledVal, totalMintedVal, maxPacksVal, whitelistPriceVal] = await Promise.all([
+                
+                contract.isPublicMintEnabled(),
+                contract.getTotalMinted(),
+                contract.getMaxPacks(),
+                contract.whitelistPrice(),
+            ])
+            console.log("Mint state fetched:", {
+                mintEnabled: Boolean(mintEnabledVal),
+                publicMintEnabled: Boolean(publicMintEnabledVal),
+                totalMinted: Number(totalMintedVal),
+                maxPacks: Number(maxPacksVal),
+                whitelistPrice: ethers.formatEther(whitelistPriceVal),
+            })
+            setMintEnabled(Boolean(mintEnabledVal))
+            setPublicMintEnabled(Boolean(publicMintEnabledVal))
+            setTotalMinted(Number(totalMintedVal))
+            setMaxPacks(Number(maxPacksVal))
+            setWhitelistPrice(ethers.formatEther(whitelistPriceVal))
+        } catch (error) {
+            console.error("Error fetching mint state:", error)
+        }
+    }
 
+    // Fetch whitelist mints for user
+    const fetchWhitelistMints = async () => {
+        try {
+            if (!walletProvider) return
+            const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
+            const signer = await ethersProvider.getSigner()
+            const address = await signer.getAddress()
+            const contract = new ethers.Contract(packContractAddress, packContractAbi, ethersProvider)
+            const wlMints = await contract.getWhitelistMints(address)
+            setWhitelistMints(Number(wlMints))
+        } catch (error) {
+            console.error("Error fetching whitelist mints:", error)
+            setWhitelistMints(0)
+        }
+    }
+
+    // Fetches both whitelist and public price for transparency
     const fetchPackPrice = async () => {
         try {
             if (!walletProvider) return
             const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
             const contract = new ethers.Contract(packContractAddress, packContractAbi, ethersProvider)
 
-            const price = await contract.packPrice()
-            //console.log("Pack price fetched:", price.toString())
-            setPackPrice(ethers.formatEther(price))
+            const [wlPrice, pubPrice] = await Promise.all([
+                contract.getWhitelistPrice(),
+                contract.getPackPrice(),
+            ])
+            setWhitelistPrice(ethers.formatEther(wlPrice))
+            setPackPrice(ethers.formatEther(wlPrice)) // packPrice is used for whitelist phase math
+            setPublicPackPrice(ethers.formatEther(pubPrice))
         } catch (error) {
             console.error("Error fetching pack price:", error)
-            // Fallback price for demo
+            setWhitelistPrice("0.0441")
             setPackPrice("0.0441")
+            setPublicPackPrice("0.0441")
         }
     }
 
@@ -62,16 +127,32 @@ export default function MintPage() {
         }
     }
 
+    // Calculate cost based on phase and user status
     const calculateTotalCost = (): string => {
-        const paidPacks = Math.max(0, quantity - freeMints)
-        const total = Number.parseFloat(packPrice) * paidPacks
+        const { freePacks, whitelistPacks, paidPacks } = getPackBreakdown()
+        let total = 0
+        total += Number(whitelistPrice) * whitelistPacks
+        total += Number(publicPackPrice) * paidPacks
         return total.toFixed(4)
     }
 
+    // Returns how many packs are free, whitelist, and public for the current user and phase
     const getPackBreakdown = () => {
-        const freePacks = Math.min(quantity, freeMints)
-        const paidPacks = Math.max(0, quantity - freeMints)
-        return { freePacks, paidPacks }
+        let freePacks = 0, whitelistPacks = 0, paidPacks = 0
+        let remaining = quantity
+        // Free mints always used first
+        freePacks = Math.min(remaining, freeMints)
+        remaining -= freePacks
+        // Whitelist phase
+        if (mintEnabled && !publicMintEnabled) {
+            whitelistPacks = Math.min(remaining, whitelistMints)
+            remaining -= whitelistPacks
+            // In whitelist phase, user cannot mint more than free+whitelist
+            paidPacks = 0
+        } else if (publicMintEnabled) {
+            paidPacks = remaining
+        }
+        return { freePacks, whitelistPacks, paidPacks }
     }
 
     const handleQuantityChange = (newQuantity: number) => {
@@ -94,29 +175,37 @@ export default function MintPage() {
             if (!walletProvider) {
                 throw new Error("No wallet provider available")
             }
-    
+
             const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
             const signer = await ethersProvider.getSigner()
             const contract = new ethers.Contract(packContractAddress, packContractAbi, signer)
-    
+
             const totalCost = ethers.parseEther(calculateTotalCost())
-    
-            console.log(`Minting ${quantity} packs for ${calculateTotalCost()} ETH`)
-            const tx = await contract.mintPack(quantity, {
+
+            // Use correct mint function depending on phase
+            let tx
+            if (mintEnabled && !publicMintEnabled) {
+                // Whitelist phase
+               tx = await contract.mintPack(quantity, {
                 value: totalCost,
-                gasLimit: 300000 * quantity,
             })
-    
+            } else if (publicMintEnabled) {
+                // Public phase
+              tx = await contract.mintPack(quantity, {
+                value: totalCost,
+            })
+            } else {
+                throw new Error("Mint is not live.")
+            }
+
             await tx.wait()
             console.log("🎉 Transaction confirmed!")
-            
-            // Refresh free mints count after transaction
-            await fetchFreeMints()
-        
+            // Refresh free mints and whitelist after transaction
+            await Promise.all([fetchFreeMints(), fetchWhitelistMints()])
         } catch (error: any) {
             // Handle different types of errors
             let errorMessage = "Transaction failed. Please try again."
-      
+
             if (error.code === "ACTION_REJECTED") {
                 errorMessage = "Transaction was rejected by user."
             } else if (error.message?.includes("insufficient funds")) {
@@ -126,7 +215,7 @@ export default function MintPage() {
             } else if (error.reason) {
                 errorMessage = error.reason
             }
-            
+
             console.error("Mint error:", error)
             throw new Error(errorMessage)
         }
@@ -161,22 +250,31 @@ export default function MintPage() {
                         {/* Mint Controls */}
                         <div className="space-y-4">
                             {/* Price Info */}
-                            <div className="text-center md:text-left bg-black border-2 border-gray-400 rounded p-3">
-                                <p className="text-green-400 mb-1 font-mono text-xs">PRICE PER PACK:</p>
-                                <p className="text-2xl font-bold text-yellow-300 font-mono">{packPrice} ETH</p>
+                            <div className="text-left bg-black border-2 border-gray-400 rounded p-3">
+                                <p className="text-green-400 mb-1 font-mono text-sm">PRICE PER PACK:</p>
+                                <div className="flex flex-col md:flex-col md:space-x-4">
+                                    <span className="text-base font-bold text-green-300 font-mono text-xs">Whitelist: <span className="text-xs text-yellow-300">{whitelistPrice} ETH</span> </span>
+                                    <span className="text-base font-bold text-green-300 font-mono text-xs">Public: <span className="text-xs text-yellow-300">{publicPackPrice} ETH</span> </span>
+                                </div>
                             </div>
 
                             {/* Free Mints Counter */}
-                            {freeMints > 0 && (
-                                <div className="text-center md:text-left bg-black border-2 border-green-400 rounded p-3">
-                                    <p className="text-green-400 mb-1 font-mono text-xs">FREE MINTS AVAILABLE:</p>
-                                    <p className="text-2xl font-bold text-green-300 font-mono">{freeMints.toString().padStart(2, '0')}</p>
-                                </div>
-                            )}
+                         
+                                {(freeMints > 0 || (!publicMintEnabled && whitelistMints > 0)) && (
+                                    <div className="text-left bg-black border-2 border-gray-400 rounded p-3">
+                                        {freeMints > 0 && (
+                                            <p className="text-green-400 mb-1 font-mono text-xs">FREE MINTS AVAILABLE: <span className="text-yellow-300">{freeMints.toString().padStart(2, '0')}</span></p>
+                                        )}
+                                        {!publicMintEnabled && whitelistMints > 0 && (
+                                            <p className="text-green-400 mb-1 font-mono text-xs">WHITELIST MINTS AVAILABLE: <span className="text-yellow-300">{whitelistMints.toString().padStart(2, '0')}</span></p>
+                                        )}
+                                    </div>
+                                )}
+                          
 
                             {/* Quantity Selector */}
                             <div>
-                                <label className="block text-cyan-300 mb-2 font-bold text-left font-mono text-xs">QUANTITY (MAX 10):</label>
+                                <label className="block text-cyan-300 mb-2 font-bold text-left font-mono text-xs">QUANTITY - MAX 10:</label>
                                 <div className="flex items-center justify-center md:justify-start space-x-3">
                                     <Button
                                         onClick={() => handleQuantityChange(quantity - 1)}
@@ -200,16 +298,42 @@ export default function MintPage() {
                                 </div>
                             </div>
 
-                            {/* Total Cost */}
+                            {/* Mint Phase & Cost Breakdown */}
                             <div className="bg-black border-2 border-gray-400 rounded p-3 space-y-1">
+                                {/* Mint Phase Info */}
+                                {(!mintEnabled && !publicMintEnabled) && (
+                                    <div className="text-center text-red-400 font-bold font-mono text-base mb-2">MINT NOT LIVE</div>
+                                )}
+                                {(mintEnabled && !publicMintEnabled) && (
+                                    <div className="text-center text-yellow-300 font-bold font-mono text-base mb-2">WHITELIST PHASE</div>
+                                )}
+                                {publicMintEnabled && (
+                                    <div className="text-center text-green-400 font-bold font-mono text-base mb-2">PUBLIC PHASE</div>
+                                )}
+
+                                {/* Minted/Max Info */}
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-green-400 font-mono font-bold text-sm">MINTED:</span>
+                                    <span className="text-base font-bold text-yellow-300 font-mono">{totalMinted} / {maxPacks}</span>
+                                </div>
+
+
+
+                                {/* Breakdown */}
                                 {(() => {
-                                    const { freePacks, paidPacks } = getPackBreakdown()
+                                    const { freePacks, whitelistPacks, paidPacks } = getPackBreakdown()
                                     return (
                                         <>
                                             {freePacks > 0 && (
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-green-400 font-mono font-bold text-sm">FREE PACKS:</span>
                                                     <span className="text-base font-bold text-green-300 font-mono">{freePacks}</span>
+                                                </div>
+                                            )}
+                                            {whitelistPacks > 0 && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-green-400 font-mono font-bold text-sm">PAID PACKS:</span>
+                                                    <span className="text-base font-bold text-yellow-300 font-mono">{whitelistPacks}</span>
                                                 </div>
                                             )}
                                             {paidPacks > 0 && (
@@ -232,10 +356,22 @@ export default function MintPage() {
                             {/* Mint Button */}
                             <Button
                                 onClick={handleMint}
-                                disabled={isLoading}
+                                disabled={
+                                    isLoading ||
+                                    (!mintEnabled && !publicMintEnabled) ||
+                                    // Whitelist phase: user must have whitelist or free mints, and cannot mint more than allowed
+                                    (mintEnabled && !publicMintEnabled && (freeMints + whitelistMints === 0 || quantity > freeMints + whitelistMints))
+                                }
                                 className="w-full bg-red-600 hover:bg-red-700 border-4 border-red-400 text-white py-3 text-base font-bold font-mono"
                             >
-                                {isConnected ? `MINT ${quantity} PACK${quantity > 1 ? "S" : ""}` : "CONNECT WALLET"}
+                                {isConnected
+                                    ? (!mintEnabled && !publicMintEnabled
+                                        ? "Mint not Live"
+                                        : (mintEnabled && !publicMintEnabled && freeMints + whitelistMints === 0
+                                            ? "Not on whitelist"
+                                            : `MINT ${quantity} PACK${quantity > 1 ? "S" : ""}`)
+                                    )
+                                    : "CONNECT WALLET"}
                             </Button>
 
                             {/* Additional Info */}
