@@ -430,18 +430,18 @@ export default function CollectionPage() {
         switch (viewMode) {
             case 'large-grid':
                 return isSideBySide
-                    ? 'grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-4'
+                    ? 'grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-3'
                     : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6'
             case 'dex':
                 return isSideBySide
-                    ? 'grid grid-cols-6 sm:grid-cols-6 md:grid-cols-6 lg:grid-cols-6 xl:grid-cols-6 2xl:grid-cols-12 gap-1'
+                    ? 'grid grid-cols-6 sm:grid-cols-6 md:grid-cols-6 lg:grid-cols-6 xl:grid-cols-6  gap-1'
                     : 'grid grid-cols-4 sm:grid-cols-6 md:grid-cols-6 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10'
             case 'list':
                 return 'space-y-4'
             default:
                 return isSideBySide
-                    ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5'
-                    : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'
+                    ? 'grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-3'
+                    : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6'
         }
     }
 
@@ -684,7 +684,7 @@ export default function CollectionPage() {
 
                                 {/* Card Grid */}
                                 {filteredAndSortedCards.length > 0 ? (
-                                    <div className="max-h-124 overflow-y-auto">
+                                    <div className="max-h-124 overflow-y-auto custom-scrollbar">
                                         <div className={getGridClasses()}>
                                             {filteredAndSortedCards.map((card, index) => (
                                                 <div
@@ -1120,6 +1120,23 @@ export default function CollectionPage() {
                     appearance: none;
                     -webkit-appearance: none;
                     -moz-appearance: none;
+                }
+                /* Custom scrollbar for collection grid */
+                .custom-scrollbar {
+                    scrollbar-width: thin;
+                    scrollbar-color: #22d3ee #134e4a;
+                }
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 10px;
+                    background: #134e4a;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #22d3ee;
+                    border-radius: 8px;
+                    border: 2px solid #0f766e;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #06b6d4;
                 }
             `}</style>
             </div>
