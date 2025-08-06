@@ -16,6 +16,9 @@ export default function NavBar({ setCurrentView, currentView }: NavBarProps) {
     const { open } = useAppKit()
     const { isConnected, address } = useAppKitAccount()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    
+    // Check if only front page should be enabled
+    const onlyFrontPage = import.meta.env.VITE_FEATURE_ONLY_FRONT_PAGE === 'true'
 
     const handleWalletClick = () => {
         if (!isConnected) {
@@ -45,6 +48,10 @@ export default function NavBar({ setCurrentView, currentView }: NavBarProps) {
     }
 
     const handleNavClick = (view: SectionType) => {
+        // Only allow navigation to landing page if feature flag is set
+        if (onlyFrontPage && view !== "landing") {
+            return
+        }
         setCurrentView(view)
         closeMobileMenu()
     }
@@ -68,40 +75,65 @@ export default function NavBar({ setCurrentView, currentView }: NavBarProps) {
                     <div className="hidden md:block">
                         <div className="ml-10 flex items-baseline space-x-4">
                             <button
-                                onClick={() => setCurrentView("landing")}
+                                onClick={() => handleNavClick("landing")}
                                 className="text-cyan-300 hover:text-yellow-300 px-3 py-2 rounded text-sm font-bold font-mono transition-colors duration-200 hover:bg-gray-600 border-2 border-transparent hover:border-gray-400"
                             >
                                 HOME
                             </button>
 
                             <button
-                                onClick={() => setCurrentView("mint")}
-                                className="text-cyan-300 hover:text-yellow-300 px-3 py-2 rounded text-sm font-bold font-mono transition-colors duration-200 hover:bg-gray-600 border-2 border-transparent hover:border-gray-400"
+                                onClick={() => handleNavClick("mint")}
+                                disabled={onlyFrontPage}
+                                className={`px-3 py-2 rounded text-sm font-bold font-mono transition-colors duration-200 border-2 border-transparent ${
+                                    onlyFrontPage 
+                                        ? "text-gray-500 cursor-not-allowed" 
+                                        : "text-cyan-300 hover:text-yellow-300 hover:bg-gray-600 hover:border-gray-400"
+                                }`}
                             >
                                 MINT
                             </button>
                             <button
-                                onClick={() => setCurrentView("openPack")}
-                                className="text-cyan-300 hover:text-yellow-300 px-3 py-2 rounded text-sm font-bold font-mono transition-colors duration-200 hover:bg-gray-600 border-2 border-transparent hover:border-gray-400"
+                                onClick={() => handleNavClick("openPack")}
+                                disabled={onlyFrontPage}
+                                className={`px-3 py-2 rounded text-sm font-bold font-mono transition-colors duration-200 border-2 border-transparent ${
+                                    onlyFrontPage 
+                                        ? "text-gray-500 cursor-not-allowed" 
+                                        : "text-cyan-300 hover:text-yellow-300 hover:bg-gray-600 hover:border-gray-400"
+                                }`}
                             >
                                 OPEN PACK
                             </button>
                             <button
-                                onClick={() => setCurrentView("collection")}
-                                className="text-cyan-300 hover:text-yellow-300 px-3 py-2 rounded text-sm font-bold font-mono transition-colors duration-200 hover:bg-gray-600 border-2 border-transparent hover:border-gray-400"
+                                onClick={() => handleNavClick("collection")}
+                                disabled={onlyFrontPage}
+                                className={`px-3 py-2 rounded text-sm font-bold font-mono transition-colors duration-200 border-2 border-transparent ${
+                                    onlyFrontPage 
+                                        ? "text-gray-500 cursor-not-allowed" 
+                                        : "text-cyan-300 hover:text-yellow-300 hover:bg-gray-600 hover:border-gray-400"
+                                }`}
                             >
                                 COLLECTION
                             </button>
                             <button
-                                onClick={() => setCurrentView("dex")}
-                                className="text-cyan-300 hover:text-yellow-300 px-3 py-2 rounded text-sm font-bold font-mono transition-colors duration-200 hover:bg-gray-600 border-2 border-transparent hover:border-gray-400"
+                                onClick={() => handleNavClick("dex")}
+                                disabled={onlyFrontPage}
+                                className={`px-3 py-2 rounded text-sm font-bold font-mono transition-colors duration-200 border-2 border-transparent ${
+                                    onlyFrontPage 
+                                        ? "text-gray-500 cursor-not-allowed" 
+                                        : "text-cyan-300 hover:text-yellow-300 hover:bg-gray-600 hover:border-gray-400"
+                                }`}
                             >
                                 DEX
                             </button>
 
                             <button
-                                onClick={() => setCurrentView("eggs")}
-                                className="text-cyan-300 hover:text-yellow-300 px-3 py-2 rounded text-sm font-bold font-mono transition-colors duration-200 hover:bg-gray-600 border-2 border-transparent hover:border-gray-400"
+                                onClick={() => handleNavClick("eggs")}
+                                disabled={onlyFrontPage}
+                                className={`px-3 py-2 rounded text-sm font-bold font-mono transition-colors duration-200 border-2 border-transparent ${
+                                    onlyFrontPage 
+                                        ? "text-gray-500 cursor-not-allowed" 
+                                        : "text-cyan-300 hover:text-yellow-300 hover:bg-gray-600 hover:border-gray-400"
+                                }`}
                             >
                                 EGGS
                             </button>
@@ -183,32 +215,57 @@ export default function NavBar({ setCurrentView, currentView }: NavBarProps) {
                     </button>
                     <button
                         onClick={() => handleNavClick("mint")}
-                        className="text-cyan-300 hover:text-yellow-300 block px-3 py-2 border-2 border-transparent hover:border-gray-400 rounded text-base font-bold font-mono w-full text-left transition-all duration-200 hover:bg-gray-600"
+                        disabled={onlyFrontPage}
+                        className={`block px-3 py-2 border-2 border-transparent rounded text-base font-bold font-mono w-full text-left transition-all duration-200 ${
+                            onlyFrontPage 
+                                ? "text-gray-500 cursor-not-allowed" 
+                                : "text-cyan-300 hover:text-yellow-300 hover:border-gray-400 hover:bg-gray-600"
+                        }`}
                     >
                         MINT
                     </button>
                     <button
                         onClick={() => handleNavClick("collection")}
-                        className="text-cyan-300 hover:text-yellow-300 block px-3 py-2 border-2 border-transparent hover:border-gray-400 rounded text-base font-bold font-mono w-full text-left transition-all duration-200 hover:bg-gray-600"
+                        disabled={onlyFrontPage}
+                        className={`block px-3 py-2 border-2 border-transparent rounded text-base font-bold font-mono w-full text-left transition-all duration-200 ${
+                            onlyFrontPage 
+                                ? "text-gray-500 cursor-not-allowed" 
+                                : "text-cyan-300 hover:text-yellow-300 hover:border-gray-400 hover:bg-gray-600"
+                        }`}
                     >
                         COLLECTION
                     </button>
                     <button
                         onClick={() => handleNavClick("dex")}
-                        className="text-cyan-300 hover:text-yellow-300 block px-3 py-2 border-2 border-transparent hover:border-gray-400 rounded text-base font-bold font-mono w-full text-left transition-all duration-200 hover:bg-gray-600"
+                        disabled={onlyFrontPage}
+                        className={`block px-3 py-2 border-2 border-transparent rounded text-base font-bold font-mono w-full text-left transition-all duration-200 ${
+                            onlyFrontPage 
+                                ? "text-gray-500 cursor-not-allowed" 
+                                : "text-cyan-300 hover:text-yellow-300 hover:border-gray-400 hover:bg-gray-600"
+                        }`}
                     >
                         DEX
                     </button>
                     <button
                         onClick={() => handleNavClick("openPack")}
-                        className="text-cyan-300 hover:text-yellow-300 block px-3 py-2 border-2 border-transparent hover:border-gray-400 rounded text-base font-bold font-mono w-full text-left transition-all duration-200 hover:bg-gray-600"
+                        disabled={onlyFrontPage}
+                        className={`block px-3 py-2 border-2 border-transparent rounded text-base font-bold font-mono w-full text-left transition-all duration-200 ${
+                            onlyFrontPage 
+                                ? "text-gray-500 cursor-not-allowed" 
+                                : "text-cyan-300 hover:text-yellow-300 hover:border-gray-400 hover:bg-gray-600"
+                        }`}
                     >
                         OPEN PACK
                     </button>
 
                     <button
                         onClick={() => handleNavClick("eggs")}
-                        className="text-cyan-300 hover:text-yellow-300 block px-3 py-2 border-2 border-transparent hover:border-gray-400 rounded text-base font-bold font-mono w-full text-left transition-all duration-200 hover:bg-gray-600"
+                        disabled={onlyFrontPage}
+                        className={`block px-3 py-2 border-2 border-transparent rounded text-base font-bold font-mono w-full text-left transition-all duration-200 ${
+                            onlyFrontPage 
+                                ? "text-gray-500 cursor-not-allowed" 
+                                : "text-cyan-300 hover:text-yellow-300 hover:border-gray-400 hover:bg-gray-600"
+                        }`}
                     >
                         EGGS
                     </button>

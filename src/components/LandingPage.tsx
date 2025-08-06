@@ -19,6 +19,9 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
         stats: false,
         cta: false,
     })
+    
+    // Check if only front page should be enabled
+    const onlyFrontPage = import.meta.env.VITE_FEATURE_ONLY_FRONT_PAGE === 'true'
 
     // Mouse tracking for pixelated effect
     useEffect(() => {
@@ -110,9 +113,9 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
     }, [])
 
     const images = [
-        "/images/img1.png?height=300&width=400",
-        "/images/img2.png?height=300&width=400",
-        "/images/img3.png?height=300&width=400",
+        "/images/img1.png",
+        "/images/img2.png",
+        "/images/img3.png",
 
     ]
 
@@ -168,11 +171,13 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
                             </div>
                         </div>
                     </section>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                        <Button size="lg" className="bg-red-600 hover:bg-red-700 border-4 border-red-400 text-white px-8 py-4 text-lg mb-8 mt-8 font-mono font-bold" onClick={() => setCurrentView("mint")}>
-                            MINT <ArrowRight className="ml-2 h-5 w-5" />
-                        </Button>
-                    </div>
+                    {!onlyFrontPage && (
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                            <Button size="lg" className="bg-red-600 hover:bg-red-700 border-4 border-red-400 text-white px-8 py-4 text-lg mb-8 mt-8 font-mono font-bold" onClick={() => setCurrentView("mint")}>
+                                MINT <ArrowRight className="ml-2 h-5 w-5" />
+                            </Button>
+                        </div>
+                    )}
 
                     <div className="bg-teal-800 border-4 border-yellow-300 p-6 mb-8">
                         <div className="max-w-2xl mx-auto font-mono space-y-4">
@@ -183,7 +188,7 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
                                 MINT UNIQUE COLLECTIBLE CARDS, EACH WITH THEIR OWN RARITY AND TRAITS. BURN YOUR NFTS TO EARN CANDY, EVOLVE YOUR COLLECTION, AND UNLOCK RARE COMBINATIONS.
                             </p>
                             <p className="text-base text-green-400 leading-relaxed">
-                                ALL THE ART, AND EVERY ACTION — FROM MINTING TO EVOLVING — IS POWERED BY VERIFIED SMART CONTRACTS AND STORED DIRECTLY ON THE BLOCKCHAIN.
+                                ALL THE ART, AND EVERY ACTION — FROM MINTING TO EVOLVING — IS POWERED BY OVER 600 VERIFIED SMART CONTRACTS.
                             </p>
                             <p className="text-base text-yellow-300 font-bold leading-relaxed">
                                 NO OFF-CHAIN HACKS, JUST PURE ON-CHAIN PLAY.
@@ -213,7 +218,7 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
                             {
                                 icon: <Zap className="h-8 w-8" />,
                                 title: "ON-CHAIN",
-                                description: "EVERYTHING IS ON-CHAIN, ALL THE ART AND ALL THE ACTIONS. WE USE X NUMBER OF SMART CONTRACTS TO MAKE THIS POSSIBLE",
+                                description: "EVERYTHING IS ON-CHAIN, ALL THE ART AND ALL THE ACTIONS. WE USE OVER 600 SMART CONTRACTS TO MAKE THIS POSSIBLE",
                             },
                             {
                                 icon: <Brush className="h-8 w-8" />,
