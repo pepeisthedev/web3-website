@@ -12,7 +12,7 @@ const metadata = { // optional app metadata
   icons: [] // e.g. an array of icon URLs
 };
 
-const projectId = 'fee49916896fc47f9820f562ae54003b'; //Reown project ID
+const projectId = import.meta.env.VITE_REOWN_PROJECT_ID; //Reown project ID
 
 // Initialize Reown AppKit (modal instance)
 export const modal = createAppKit({
