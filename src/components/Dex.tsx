@@ -207,7 +207,7 @@ export default function Dex() {
                 )}
 
                 {/* DEX Grid */}
-                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-15 gap-2 mb-8">
+                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-15 gap-2 pb-8">
                     {filteredEntries.map((entry) => (
                         <div
                             key={entry.cardId}
