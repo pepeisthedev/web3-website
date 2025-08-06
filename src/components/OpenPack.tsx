@@ -202,7 +202,7 @@ export default function OpenPackPage() {
                                     onClick={handleOpenPack}
                                     disabled={!isConnected || packCount === 0}
                                     className={`
-                                        w-full py-4 text-lg font-bold font-mono border-4 rounded transition-all duration-300
+                                        w-full py-4 text-sm sm:text-lg font-bold font-mono border-4 rounded transition-all duration-300
                                         ${packCount > 0 && isConnected
                                             ? 'bg-red-600 hover:bg-red-700 border-red-400 text-white'
                                             : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
@@ -210,11 +210,17 @@ export default function OpenPackPage() {
                                     `}
                                 >
                                     {!isConnected ? (
-                                        "CONNECT WALLET"
+                                        <span className="block sm:hidden">CONNECT</span>
                                     ) : packCount === 0 ? (
-                                        "NO PACKS AVAILABLE"
+                                        <span>
+                                            <span className="block sm:hidden">NO PACKS</span>
+                                            <span className="hidden sm:block">NO PACKS AVAILABLE</span>
+                                        </span>
                                     ) : (
                                         "OPEN PACK"
+                                    )}
+                                    {!isConnected && (
+                                        <span className="hidden sm:block">CONNECT WALLET</span>
                                     )}
                                 </Button>
                             </div>
