@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from "react"
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react"
+import { ethers } from "ethers"
 import { Loader2, Eye, EyeOff } from "lucide-react"
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
 import Card from "./Card"
 import { fetchAllUserCards, CardData } from "../lib/fetchAllUserCards"
-import { generateBeadSvgFromIndex } from "../lib/combineCompleteCard"
+import { generateBeadSvgFromIndex, generateFakeCardMetadataFromCardId } from "../lib/combineCompleteCard"
+import characterStatsContractABI from "../assets/abi/Bead151CharacterStats.json"
+
+const characterStatsContractAddress = import.meta.env.VITE_BEAD151_CHARACTER_STATS_CONTRACT
 
 interface DexEntry {
     cardId: number
@@ -22,11 +26,13 @@ export default function Dex() {
     const [selectedCardData, setSelectedCardData] = useState<CardData | null>(null)
     const [dexEntries, setDexEntries] = useState<DexEntry[]>([])
     const [ownedCards, setOwnedCards] = useState<Set<number>>(new Set())
+    const [ownedCardsWithMetadata, setOwnedCardsWithMetadata] = useState<Map<number, CardData>>(new Map())
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [hideNotOwned, setHideNotOwned] = useState<boolean>(false)
     const [selectedCard, setSelectedCard] = useState<DexEntry | null>(null)
     const [isDexLoading, setIsDexLoading] = useState<boolean>(true)
     const [loadingProgress, setLoadingProgress] = useState<number>(0)
+    const [isGeneratingCardData, setIsGeneratingCardData] = useState<boolean>(false)
 
     // Initialize DEX with all 151 cards
     useEffect(() => {
@@ -96,6 +102,13 @@ export default function Dex() {
             console.log("Owned card IDs:", ownedCardIds);
             setOwnedCards(ownedCardIds)
 
+            // Populate ownedCardsWithMetadata Map
+            const cardMetadataMap = new Map<number, CardData>()
+            cards.forEach(card => {
+                cardMetadataMap.set(card.cardId, card)
+            })
+            setOwnedCardsWithMetadata(cardMetadataMap)
+
             // Update dex entries with ownership info and card details
             setDexEntries(prevEntries => {
                 console.log("Previous entries length:", prevEntries.length)
@@ -129,8 +142,30 @@ export default function Dex() {
         setSelectedCard(entry)
 
         // Load the full card data for the Card component
-       // const cardData = await loadAllCardImages(entry.cardId)
-       // setSelectedCardData(cardData)
+        let cardData: CardData
+        
+        if (entry.owned && ownedCardsWithMetadata.has(entry.cardId)) {
+            // Use real metadata for owned cards
+            cardData = ownedCardsWithMetadata.get(entry.cardId)!
+        } else {
+            // Generate fake metadata for unowned cards
+            const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
+            const characterStatsContract = new ethers.Contract(
+                characterStatsContractAddress,
+                characterStatsContractABI,
+                ethersProvider
+            )
+            
+            const fakeMetadata = await generateFakeCardMetadataFromCardId(entry.cardId, characterStatsContract)
+          
+            cardData = {
+                tokenId: 0, // Not applicable for fake cards
+                cardId: entry.cardId,
+                metadata: fakeMetadata // Already a JSON string, don't stringify again
+            }
+        }
+        
+        setSelectedCardData(cardData)
     }
 
 
@@ -311,20 +346,12 @@ export default function Dex() {
                     }}
                 >
                     {/* Card Component */}
-                    {selectedCard ? (
-                        <div className="flex flex-col items-center space-y-6">
-                            <div className="transform scale-[2] sm:scale-[2] md:scale-150">
-                                <img
-                                    src={selectedCard.imageUrl.startsWith('<svg')
-                                        ? `data:image/svg+xml,${encodeURIComponent(selectedCard.imageUrl)}`
-                                        : selectedCard.imageUrl}
-                                    alt={`Card ${selectedCard.cardId}`}
-                                    className="w-48 h-64 object-contain pixelated border-4 border-grey-700 bg-black rounded-lg"
-                                    onError={e => {
-                                        (e.target as HTMLImageElement).src = '/placeholder.svg'
-                                    }}
-                                />
-                            </div>
+                    {selectedCardData ? (
+                        <div className="flex flex-col items-center space-y-6" onClick={(e) => e.stopPropagation()}>
+                            <Card 
+                                cardData={selectedCardData} 
+                                customClasses="w-48 h-64 sm:w-56 sm:h-72 md:w-64 md:h-80"
+                            />
                         </div>
                     ) : (
                         <div className="flex flex-col items-center space-y-4">
