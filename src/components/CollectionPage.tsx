@@ -11,6 +11,7 @@ import { Input } from "./ui/input"
 import { Checkbox } from "./ui/checkbox"
 
 import { fetchAllUserCards } from "../lib/fetchAllUserCards"
+import { generateBeadSvgFromMetadata, generateCardMetadataForNextEvolution } from "../lib/combineCompleteCard"
 
 // Contract addresses and ABIs
 import cardContractABI from "../assets/abi/Bead151Card.json"
@@ -26,12 +27,15 @@ const svgContractAddress = import.meta.env.VITE_BEAD151_CARD_ART_CONTRACT
 interface CardData {
     tokenId: number
     cardId: number
-    metadata: string 
+    metadata: string
 }
 
 interface CollectionCard extends CardData {
     count: number
 }
+
+// EvolvedCardData is now just a CollectionCard since we're using metadata instead of custom SVG
+type EvolvedCardData = CollectionCard
 
 interface CharacterStat {
     cardId: number
@@ -42,6 +46,52 @@ interface CharacterStat {
 }
 
 type ViewMode = 'large-grid' | 'dex' | 'list'
+
+// Helper component for dex view images with async loading
+interface DexImageProps {
+    metadata: string
+    cardId: number
+}
+
+function DexImage({ metadata, cardId }: DexImageProps) {
+    const [imageSrc, setImageSrc] = useState<string>("/placeholder.svg")
+    const [isLoading, setIsLoading] = useState<boolean>(true)
+
+    useEffect(() => {
+        const generateImage = async () => {
+            setIsLoading(true)
+            try {
+                const generatedSrc = await generateBeadSvgFromMetadata(metadata)
+                setImageSrc(generatedSrc)
+            } catch (e) {
+                console.error("Error generating bead image:", e)
+                setImageSrc("/placeholder.svg")
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        generateImage()
+    }, [metadata])
+
+    return (
+        <>
+            {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                    <Loader2 className="h-4 w-4 text-cyan-300 animate-spin" />
+                </div>
+            )}
+            <img
+                src={imageSrc}
+                alt={cardId.toString()}
+                className="w-full h-full object-cover transition-all duration-300 pixelated"
+                onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/placeholder.svg'
+                }}
+            />
+        </>
+    )
+}
 
 export default function CollectionPage() {
     const { address, isConnected } = useAppKitAccount()
@@ -57,16 +107,47 @@ export default function CollectionPage() {
     const [showOnlyDuplicates, setShowOnlyDuplicates] = useState<boolean>(false)
     const [useSideBySideLayout, setUseSideBySideLayout] = useState<boolean>(true)
     const [showFilterMenu, setShowFilterMenu] = useState<boolean>(false)
-    const [rarityFilters, setRarityFilters] = useState<{
-        Common: boolean,
-        Uncommon: boolean,
-        Rare: boolean,
-        Legendary: boolean
+    const [frameFilters, setFrameFilters] = useState<{
+        Normal: boolean,
+        Gold: boolean,
+        Holo: boolean
     }>({
-        Common: true,
-        Uncommon: true,
-        Rare: true,
-        Legendary: true
+        Normal: true,
+        Gold: true,
+        Holo: true
+    })
+    const [elementFilters, setElementFilters] = useState<{
+        Fire: boolean,
+        Water: boolean,
+        Electric: boolean,
+        Grass: boolean,
+        Ice: boolean,
+        Fighting: boolean,
+        Poison: boolean,
+        Ground: boolean,
+        Flying: boolean,
+        Psychic: boolean,
+        Bug: boolean,
+        Rock: boolean,
+        Ghost: boolean,
+        Dragon: boolean,
+        Fairy: boolean
+    }>({
+        Fire: true,
+        Water: true,
+        Electric: true,
+        Grass: true,
+        Ice: true,
+        Fighting: true,
+        Poison: true,
+        Ground: true,
+        Flying: true,
+        Psychic: true,
+        Bug: true,
+        Rock: true,
+        Ghost: true,
+        Dragon: true,
+        Fairy: true
     })
 
     // Set responsive default view mode on component mount
@@ -81,7 +162,7 @@ export default function CollectionPage() {
     const [showEvolveModal, setShowEvolveModal] = useState<boolean>(false)
     const [showEvolutionResultModal, setShowEvolutionResultModal] = useState<boolean>(false)
     const [evolvedCardId, setEvolvedCardId] = useState<number>(0)
-    const [evolvedCardData, setEvolvedCardData] = useState<{ svg: string } | null>(null)
+    const [evolvedCardData, setEvolvedCardData] = useState<EvolvedCardData | null>(null)
     const [showCongratulationsModal, setShowCongratulationsModal] = useState<boolean>(false)
     const [candiesReceived, setCandiesReceived] = useState<number>(0)
     const [isLoadingCandy, setIsLoadingCandy] = useState<boolean>(false)
@@ -94,33 +175,32 @@ export default function CollectionPage() {
     }, [isConnected, address])
 
     const resetFilters = () => {
-        setRarityFilters({
-            Common: true,
-            Uncommon: true,
-            Rare: true,
-            Legendary: true
+        setFrameFilters({
+            Normal: true,
+            Gold: true,
+            Holo: true
+        })
+        setElementFilters({
+            Fire: true,
+            Water: true,
+            Electric: true,
+            Grass: true,
+            Ice: true,
+            Fighting: true,
+            Poison: true,
+            Ground: true,
+            Flying: true,
+            Psychic: true,
+            Bug: true,
+            Rock: true,
+            Ghost: true,
+            Dragon: true,
+            Fairy: true
         })
         setHideDuplicates(false)
         setShowOnlyDuplicates(false)
     }
 
-    const getImageSrc = (svg: string) => {
-        if (svg.startsWith("<svg")) {
-            const encodedSvg = encodeURIComponent(svg)
-            return `data:image/svg+xml,${encodedSvg}`
-        }
-        return svg
-    }
-
-      const getImageSrcFromMetadata = (metadata: string) => {
-            try {
-            const meta = JSON.parse(metadata)
-            // meta.image is a data URI: data:image/svg+xml;base64,...
-            return meta.image || "/placeholder.svg"
-            } catch (e) {
-            return "/placeholder.svg"
-            }
-        }
 
     const fetchCandyData = async () => {
         if (!walletProvider || !address) return
@@ -228,17 +308,16 @@ export default function CollectionPage() {
 
             console.log("Evolving card token id:", selectedCard.tokenId)
             const tx = await candyContract.evolveCard(selectedCard.tokenId)
-   
+
             await tx.wait()
 
-            // Show evolution result modal
+            // Show evolution result modal (reusing the evolved card data we already generated)
             const nextCardId = getNextEvolutionCardId(selectedCard.cardId)
             setEvolvedCardId(nextCardId)
-            
-            // Fetch the evolved card data
-            const evolvedData = await getCardDataById(nextCardId)
-            setEvolvedCardData(evolvedData)
-            
+
+            // No need to re-fetch - we already have the evolved card data from handleOpenEvolveModal
+            // setEvolvedCardData is already set with the correct data
+
             setShowEvolutionResultModal(true)
 
             // Refresh collection and candy balance
@@ -251,13 +330,43 @@ export default function CollectionPage() {
     }
 
     const handleOpenEvolveModal = async () => {
-        if (!selectedCard) return
-        
-        // Pre-load the evolved card data
-        const nextCardId = getNextEvolutionCardId(selectedCard.cardId)
-        const evolvedData = await getCardDataById(nextCardId)
-        setEvolvedCardData(evolvedData)
-        setShowEvolveModal(true)
+        if (!selectedCard || !walletProvider) return
+
+        try {
+            // Setup contracts
+            const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
+            const characterStatsContract = new ethers.Contract(characterStatsContractAddress, characterStatsContractABI, ethersProvider)
+
+            // Generate the evolved card metadata using the new function
+            const evolvedCardMetadata = await generateCardMetadataForNextEvolution(selectedCard.metadata, characterStatsContract)
+
+            // Create card data object for the evolved card
+            const nextCardId = getNextEvolutionCardId(selectedCard.cardId)
+            const evolvedCardData: EvolvedCardData = {
+                metadata: evolvedCardMetadata,
+                cardId: nextCardId,
+                tokenId: selectedCard.tokenId + 1000000, // Fake token ID for preview
+                count: 1 // Default count for preview
+            }
+
+            setEvolvedCardData(evolvedCardData)
+            setShowEvolveModal(true)
+        } catch (error) {
+            console.error('Error generating evolved card preview:', error)
+            // Fallback to the old method - create a minimal card data structure
+            const nextCardId = getNextEvolutionCardId(selectedCard.cardId)
+            const evolvedData = await getCardDataById(nextCardId)
+            if (evolvedData) {
+                const fallbackCardData: EvolvedCardData = {
+                    metadata: selectedCard.metadata,
+                    cardId: nextCardId,
+                    tokenId: selectedCard.tokenId + 1000000,
+                    count: 1
+                }
+                setEvolvedCardData(fallbackCardData)
+            }
+            setShowEvolveModal(true)
+        }
     }
 
     const handleSendToDoctor = async () => {
@@ -335,13 +444,24 @@ export default function CollectionPage() {
         setCollectionCards(allCardsWithCount)
     }
 
-    // New: get rarity and card title from metadata JSON
-    const getRarityValue = (metadata: string): string => {
+    // New: get frame and element values from metadata JSON
+    const getFrameValue = (metadata: string): string => {
         try {
             const meta = JSON.parse(metadata)
             const attributes = meta.attributes || []
-            const rarityTrait = attributes.find((trait: any) => trait.trait_type === "Rarity")
-            return rarityTrait ? rarityTrait.value : "Unknown"
+            const frameTrait = attributes.find((trait: any) => trait.trait_type === "Frame")
+            return frameTrait ? frameTrait.value : "Unknown"
+        } catch {
+            return "Unknown"
+        }
+    }
+
+    const getElementValue = (metadata: string): string => {
+        try {
+            const meta = JSON.parse(metadata)
+            const attributes = meta.attributes || []
+            const elementTrait = attributes.find((trait: any) => trait.trait_type === "Element")
+            return elementTrait ? elementTrait.value : "Unknown"
         } catch {
             return "Unknown"
         }
@@ -372,31 +492,51 @@ export default function CollectionPage() {
                     const meta = JSON.parse(card.metadata)
                     const attributes = meta.attributes || []
                     const cardTitle = getCardTitle(card.metadata, card.cardId)
-                    const rarity = getRarityValue(card.metadata)
-                    const colorTrait = attributes.find((trait: any) => trait.trait_type === "Color")
-                    const color = colorTrait ? colorTrait.value : ""
+                    const frame = getFrameValue(card.metadata)
+                    const element = getElementValue(card.metadata)
+
+                    // Get other searchable attributes
+                    const attackTrait = attributes.find((trait: any) => trait.trait_type === "Attack")
+                    const hpTrait = attributes.find((trait: any) => trait.trait_type === "HP")
+                    const defenseTrait = attributes.find((trait: any) => trait.trait_type === "Defense")
+                    const rarityTrait = attributes.find((trait: any) => trait.trait_type === "Rarity")
 
                     const searchLower = searchTerm.toLowerCase()
                     return cardTitle.toLowerCase().includes(searchLower) ||
-                        rarity.toLowerCase().includes(searchLower) ||
-                        color.toLowerCase().includes(searchLower) ||
+                        frame.toLowerCase().includes(searchLower) ||
+                        element.toLowerCase().includes(searchLower) ||
                         card.cardId.toString().includes(searchTerm) ||
-                        card.metadata.toLowerCase().includes(searchLower)
+                        (attackTrait && attackTrait.value.toString().includes(searchTerm)) ||
+                        (hpTrait && hpTrait.value.toString().includes(searchTerm)) ||
+                        (defenseTrait && defenseTrait.value.toString().includes(searchTerm)) ||
+                        (rarityTrait && rarityTrait.value.toLowerCase().includes(searchLower))
                 } catch {
                     return card.cardId.toString().includes(searchTerm)
                 }
             })
         }
 
-        // Filter by rarity checkboxes
-        const activeRarities = Object.entries(rarityFilters)
+        // Filter by frame checkboxes
+        const activeFrames = Object.entries(frameFilters)
             .filter(([_, isActive]) => isActive)
-            .map(([rarity, _]) => rarity)
+            .map(([frame, _]) => frame)
 
-        if (activeRarities.length < 4) { // Only filter if not all rarities are selected
+        if (activeFrames.length < 3) { // Only filter if not all frames are selected
             cards = cards.filter(card => {
-                const rarity = getRarityValue(card.metadata)
-                return activeRarities.includes(rarity)
+                const frame = getFrameValue(card.metadata)
+                return activeFrames.includes(frame)
+            })
+        }
+
+        // Filter by element checkboxes
+        const activeElements = Object.entries(elementFilters)
+            .filter(([_, isActive]) => isActive)
+            .map(([element, _]) => element)
+
+        if (activeElements.length < 17) { // Only filter if not all elements are selected
+            cards = cards.filter(card => {
+                const element = getElementValue(card.metadata)
+                return activeElements.includes(element)
             })
         }
 
@@ -640,7 +780,7 @@ export default function CollectionPage() {
                                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-yellow-300 h-4 w-4" />
                                         <Input
                                             type="text"
-                                            placeholder="Search cards, rarity, color..."
+                                            placeholder="Search cards, frames, elements, stats..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                             className="pl-10 bg-black border-2 border-gray-400 text-green-400 placeholder-gray-400 font-mono"
@@ -693,7 +833,7 @@ export default function CollectionPage() {
                                                 ${viewMode === 'dex' ? 'p-0 sm:p-1' : 'p-1'}
                                                 ${selectedCard?.tokenId === card.tokenId
                                                             ? 'border-yellow-300 bg-yellow-900/30'
-                                                            : 'border-transparent hover:border-cyan-400'
+                                                            : 'border-transparent'
                                                         }
                                             `}
                                                     onClick={() => handleCardClick(card)}
@@ -702,8 +842,8 @@ export default function CollectionPage() {
                                                         // Dex mode: small thumbnails with no metadata
                                                         <div
                                                             key={card.cardId}
-                                                      
-                                                            className="relative aspect-square rounded border-2 overflow-hidden transition-all duration-300 hover:scale-105 cursor-pointer bg-black border-yellow-300 shadow-lg hover:border-cyan-300"
+
+                                                            className="relative aspect-square rounded border-2 overflow-hidden transition-all duration-300 hover:scale-105 cursor-pointer bg-black border-yellow-300 shadow-lg"
 
                                                         >
                                                             {/* Card Number */}
@@ -713,17 +853,10 @@ export default function CollectionPage() {
                                                                 </span>
                                                             </div>
                                                             {/* Card Image */}
-                                                            <div className="w-full h-full flex items-center justify-center p-1">
-                                                                <img
-                                                                    src={getImageSrcFromMetadata(card.metadata)}
-                                                                    alt={card.cardId.toString()}
-                                                                    className={`
-                                                                            max-w-full max-h-full object-contain transition-all duration-300 pixelated
-                                                                        }
-                                                                        `}
-                                                                    onError={(e) => {
-                                                                        (e.target as HTMLImageElement).src = '/placeholder.svg'
-                                                                    }}
+                                                            <div className="w-full h-full flex items-center justify-center p-0.5 relative">
+                                                                <DexImage
+                                                                    metadata={card.metadata}
+                                                                    cardId={card.cardId}
                                                                 />
                                                             </div>
                                                         </div>
@@ -734,7 +867,7 @@ export default function CollectionPage() {
                                                             showBackDefault={false}
                                                             disableFlip={true}
                                                             forceShowFront={true}
-                                                            scaleIfHover={false}
+                                                            scaleIfHover={true}
                                                         />
                                                     )}
                                                 </div>
@@ -773,35 +906,66 @@ export default function CollectionPage() {
                                     </button>
                                 </div>
 
-                                {/* Rarity Filters */}
+                                {/* Frame Filters */}
                                 <div className="mb-6">
                                     <h4 className="text-lg font-bold text-cyan-300 font-mono mb-4">
-                                        RARITY FILTERS
+                                        FRAME
                                     </h4>
                                     <div className="bg-black border-2 border-gray-400 rounded-lg p-4">
                                         <div className="grid grid-cols-1 gap-3">
-                                            {(['Common', 'Uncommon', 'Rare', 'Legendary'] as const).map((rarity) => (
-                                                <div key={rarity} className="flex items-center space-x-3">
+                                            {(['Normal', 'Gold', 'Holo'] as const).map((frame) => (
+                                                <div key={frame} className="flex items-center space-x-3">
                                                     <Checkbox
-                                                        id={`sidebar-rarity-${rarity.toLowerCase()}`}
-                                                        checked={rarityFilters[rarity]}
+                                                        id={`sidebar-frame-${frame.toLowerCase()}`}
+                                                        checked={frameFilters[frame]}
                                                         onCheckedChange={(checked) => {
-                                                            setRarityFilters(prev => ({
+                                                            setFrameFilters(prev => ({
                                                                 ...prev,
-                                                                [rarity]: checked as boolean
+                                                                [frame]: checked as boolean
                                                             }))
                                                         }}
                                                         className="border-yellow-300 data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
                                                     />
                                                     <label
-                                                        htmlFor={`sidebar-rarity-${rarity.toLowerCase()}`}
-                                                        className={`text-sm cursor-pointer font-mono ${rarity === 'Common' ? 'text-gray-300' :
-                                                            rarity === 'Uncommon' ? 'text-green-400' :
-                                                                rarity === 'Rare' ? 'text-blue-400' :
+                                                        htmlFor={`sidebar-frame-${frame.toLowerCase()}`}
+                                                        className={`text-sm cursor-pointer font-mono ${frame === 'Normal' ? 'text-gray-300' :
+                                                                frame === 'Gold' ? 'text-yellow-400' :
                                                                     'text-purple-400'
                                                             }`}
                                                     >
-                                                        {rarity.toUpperCase()}
+                                                        {frame.toUpperCase()}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Element Filters */}
+                                <div className="mb-6">
+                                    <h4 className="text-lg font-bold text-cyan-300 font-mono mb-4">
+                                        ELEMENT
+                                    </h4>
+                                    <div className="bg-black border-2 border-gray-400 rounded-lg p-4">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {(['Fire', 'Water', 'Electric', 'Grass', 'Ice', 'Fighting', 'Poison', 'Ground', 'Flying', 'Psychic', 'Bug', 'Rock', 'Ghost', 'Dragon', 'Fairy'] as const).map((element) => (
+                                                <div key={element} className="flex items-center space-x-2">
+                                                    <Checkbox
+                                                        id={`sidebar-element-${element.toLowerCase()}`}
+                                                        checked={elementFilters[element]}
+                                                        onCheckedChange={(checked) => {
+                                                            setElementFilters(prev => ({
+                                                                ...prev,
+                                                                [element]: checked as boolean
+                                                            }))
+                                                        }}
+                                                        className="border-yellow-300 data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
+                                                    />
+                                                    <label
+                                                        htmlFor={`sidebar-element-${element.toLowerCase()}`}
+                                                        className="text-xs cursor-pointer font-mono text-gray-300"
+                                                    >
+                                                        {element.toUpperCase()}
                                                     </label>
                                                 </div>
                                             ))}
@@ -812,7 +976,7 @@ export default function CollectionPage() {
                                 {/* Duplicate Filters */}
                                 <div className="mb-6">
                                     <h4 className="text-lg font-bold text-cyan-300 font-mono mb-4">
-                                        DUPLICATE FILTERS
+                                        DUPLICATE
                                     </h4>
                                     <div className="bg-black border-2 border-gray-400 rounded-lg p-4">
                                         <div className="space-y-3">
@@ -875,23 +1039,19 @@ export default function CollectionPage() {
                                 </h2>
 
                                 {/* Evolution Preview */}
-                                <div className="flex items-center justify-center gap-3 sm:gap-4">
+                                <div className="flex items-center justify-center ">
                                     {/* Current Card */}
                                     <div className="flex flex-col items-center flex-1">
                                         <div className="text-cyan-300 font-mono mb-2 text-xs sm:text-sm">CURRENT</div>
-                                        <div className="w-30 h-30 sm:w-38 sm:h-38 mb-2 bg-black border-2 border-yellow-300 rounded-lg overflow-hidden">
-                                            <img
-                                                src={getImageSrcFromMetadata(selectedCard.metadata)}
-                                                alt={`Card ${selectedCard.cardId}`}
-                                                className="w-full h-full object-contain pixelated"
-                                                onError={(e) => {
-                                                    (e.target as HTMLImageElement).src = '/placeholder.svg'
-                                                }}
-                                            />
-                                        </div>
-                                        <div className="text-xs text-gray-300 font-mono">
-                                            #{selectedCard.cardId.toString().padStart(3, '0')}
-                                        </div>
+                                        <Card
+                                            cardData={selectedCard}
+                                            showBackDefault={false}
+                                            disableFlip={false}
+                                            forceShowFront={false}
+                                            scaleIfHover={false}
+                                            customClasses="w-35 h-38 sm:w-45 sm:h-58"
+                                        />
+
                                     </div>
 
                                     {/* Arrow */}
@@ -902,28 +1062,26 @@ export default function CollectionPage() {
                                     {/* Next Evolution Card */}
                                     <div className="flex flex-col items-center flex-1">
                                         <div className="text-purple-300 font-mono mb-2 text-xs sm:text-sm">EVOLVED</div>
-                                        <div className="w-30 h-30 sm:w-38 sm:h-38 mb-2 bg-black border-2 border-purple-400 rounded-lg overflow-hidden">
-                                            {evolvedCardData ? (
-                                                <img
-                                                    src={getImageSrc(evolvedCardData.svg)}
-                                                    alt={`Card ${getNextEvolutionCardId(selectedCard.cardId)}`}
-                                                    className="w-full h-full object-contain pixelated"
-                                                    onError={(e) => {
-                                                        (e.target as HTMLImageElement).src = '/placeholder.svg'
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center">
-                                                    <div className="text-gray-400 font-mono text-center">
-                                                        <Loader2 className="h-4 w-4 sm:h-6 sm:w-6 animate-spin mx-auto mb-1" />
-                                                        <div className="text-[10px] sm:text-xs">LOADING...</div>
-                                                    </div>
+
+                                        {evolvedCardData ? (
+                                            <Card
+                                                cardData={evolvedCardData}
+                                                showBackDefault={false}
+                                                disableFlip={false}
+                                                forceShowFront={false}
+                                                scaleIfHover={false}
+                                                customClasses="w-35 h-38 sm:w-45 sm:h-58"
+                                            />
+                                        ) : (
+                                            <div className="w-30 h-36 sm:w-40 sm:h-48 bg-black border-2 border-purple-400 rounded-lg overflow-hidden flex items-center justify-center">
+                                                <div className="text-gray-400 font-mono text-center">
+                                                    <Loader2 className="h-4 w-4 sm:h-6 sm:w-6 animate-spin mx-auto mb-1" />
+                                                    <div className="text-[10px] sm:text-xs">LOADING...</div>
                                                 </div>
-                                            )}
-                                        </div>
-                                        <div className="text-xs text-gray-300 font-mono">
-                                            #{getNextEvolutionCardId(selectedCard.cardId).toString().padStart(3, '0')}
-                                        </div>
+                                            </div>
+                                        )}
+
+
                                     </div>
                                 </div>
 
@@ -946,11 +1104,10 @@ export default function CollectionPage() {
                                     <Button
                                         onClick={handleEvolveCard}
                                         disabled={!selectedCard || !canEvolve(selectedCard.cardId)}
-                                        className={`flex-1 border-4 font-mono font-bold py-2 sm:py-3 text-sm sm:text-base ${
-                                            selectedCard && canEvolve(selectedCard.cardId)
+                                        className={`flex-1 border-4 font-mono font-bold py-2 sm:py-3 text-sm sm:text-base ${selectedCard && canEvolve(selectedCard.cardId)
                                                 ? 'bg-purple-600 hover:bg-purple-700 border-purple-400 text-white'
                                                 : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
-                                        }`}
+                                            }`}
                                     >
                                         {selectedCard ? getEvolveButtonText(selectedCard.cardId) : 'CANNOT EVOLVE'}
                                     </Button>
@@ -983,18 +1140,17 @@ export default function CollectionPage() {
 
                                 {/* Show evolved card */}
                                 <div className="flex justify-center mb-4 sm:mb-6">
-                                    <div className="w-32 h-32 sm:w-48 sm:h-48 bg-black border-4 border-purple-400 rounded-lg overflow-hidden">
+                                    <div className="w-40 h-46 sm:w-48 h-44 sm:h-60">
                                         {evolvedCardData ? (
-                                            <img
-                                                src={getImageSrc(evolvedCardData.svg)}
-                                                alt={`Evolved Card ${evolvedCardId}`}
-                                                className="w-full h-full object-contain pixelated"
-                                                onError={(e) => {
-                                                    (e.target as HTMLImageElement).src = '/placeholder.svg'
-                                                }}
+                                            <Card
+                                                cardData={evolvedCardData}
+                                                showBackDefault={false}
+                                                disableFlip={false}
+                                                forceShowFront={false}
+                                                scaleIfHover={false}
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center animate-pulse">
+                                            <div className="w-full h-full bg-black border-4 border-purple-400 rounded-lg overflow-hidden flex items-center justify-center animate-pulse">
                                                 <div className="text-gray-400 font-mono text-center">
                                                     <div className="text-xl sm:text-2xl mb-2">🎉</div>
                                                     <div className="text-xs sm:text-sm">EVOLVED CARD</div>
@@ -1012,7 +1168,7 @@ export default function CollectionPage() {
                                     }}
                                     className="w-full bg-purple-600 hover:bg-purple-700 border-4 border-purple-400 text-white font-mono font-bold py-2 sm:py-3 text-sm sm:text-lg"
                                 >
-                                    AMAZING!
+                                    Close
                                 </Button>
                             </div>
                         </div>

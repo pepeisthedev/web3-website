@@ -13,7 +13,7 @@
       },
       {
         "internalType": "address",
-        "name": "artContract_",
+        "name": "svgBeads151RouterContract_",
         "type": "address"
       },
       {
@@ -378,25 +378,6 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "receiver",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint96",
-        "name": "feeNumerator",
-        "type": "uint96"
-      }
-    ],
-    "name": "DefaultRoyaltySet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
         "name": "to",
         "type": "address"
       },
@@ -458,31 +439,6 @@
       }
     ],
     "name": "PackOpened",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "receiver",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint96",
-        "name": "feeNumerator",
-        "type": "uint96"
-      }
-    ],
-    "name": "TokenRoyaltySet",
     "type": "event"
   },
   {
@@ -558,19 +514,6 @@
     "name": "approve",
     "outputs": [],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "art",
-    "outputs": [
-      {
-        "internalType": "contract IArt",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -841,6 +784,25 @@
         "internalType": "bool",
         "name": "isApproved",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
+        "name": "tokenIds",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "metadata",
+    "outputs": [
+      {
+        "internalType": "string[]",
+        "name": "uris",
+        "type": "string[]"
       }
     ],
     "stateMutability": "view",
@@ -1161,6 +1123,16 @@
         "internalType": "uint8",
         "name": "defense",
         "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "frameId",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "elementType",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",
@@ -1180,6 +1152,19 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "svgBead151RouterContract",
+    "outputs": [
+      {
+        "internalType": "contract ISvgRouter",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1212,25 +1197,6 @@
         "internalType": "string",
         "name": "",
         "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "tokenIds",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "tokenURIs",
-    "outputs": [
-      {
-        "internalType": "string[]",
-        "name": "uris",
-        "type": "string[]"
       }
     ],
     "stateMutability": "view",

@@ -34,7 +34,7 @@ export async function fetchAllUserCards(
     const cardIdsArray = Array.from(cardIds).map((id: any) => Number(id))
     const tokenIdsArray = Array.from(tokenIds).map((id: any) => Number(id))
 
-    const metadataArray = await cardContract.tokenURIs(tokenIdsArray)
+    const metadataArray = await cardContract.metadata(tokenIdsArray)
 
     // Helper to decode base64 data:application/json;base64,...
     function decodeBase64Json(dataUri: string): string {

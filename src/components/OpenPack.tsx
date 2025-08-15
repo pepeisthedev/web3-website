@@ -73,9 +73,8 @@ export default function OpenPackPage() {
         const cardContract = new ethers.Contract(cardContractAddress, cardContractAbi, ethersProvider)
         try {
             // Fetch all SVGs and metadata in a single call
-            //console.log("Fetching card data for tokenIds:", tokenIds)
-            const metadataArray = await cardContract.tokenURIs(tokenIds)
-           // console.log("Fetched metadata:", metadataArray[0])
+            const metadataArray = await cardContract.metadata(tokenIds)
+          //  console.log("Fetched metadata:", metadataArray[0])
 
             // Map the results back to CardData format, decoding base64 JSON if needed
             return metadataArray.map((item: string) => ({
@@ -155,8 +154,8 @@ export default function OpenPackPage() {
                                     onMouseLeave={() => setIsHovering(false)}
                                 >
                                     {/* Pack Image */}
-                                    <div className="relative bg-gray-600 border-4 border-gray-400 rounded-lg p-4 shadow-lg">
-                                        <div className="w-48 h-64 mx-auto bg-black border-2 border-gray-400 rounded flex items-center justify-center overflow-hidden">
+                                    <div className="relative rounded-lg shadow-lg">
+                                        <div className="w-48 h-64 mx-auto rounded flex items-center justify-center overflow-hidden">
                                             <img
                                                 src="/images/pack.png"
                                                 alt="Bead151 Pack"
@@ -247,7 +246,7 @@ export default function OpenPackPage() {
                     onClose={() => setShowModal(false)}
                     title="Open Bead151 Pack"
                     initText="Confirm transaction to open a pack"
-                    completedText="Pack opened successfully! Here are your cards:"
+                    completedText=""
                     initImage="/images/pack.png"
                     onConfirm={executeOpenPack}
                     extractedCards={extractedCards}

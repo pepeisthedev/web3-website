@@ -134,7 +134,10 @@ export default function OpenPackTransactionModal({
 
         {modalState === "completed" && (
           <div className="text-center">
-            <p className="text-cyan-300 mb-3 text-sm leading-tight font-mono">{completedText}</p>
+            <div className="text-cyan-300 mb-3 text-sm leading-tight font-mono">
+              <div className="mb-2">Pack opened successfully!</div>
+              <div>Click to reveal your cards.</div>
+            </div>
             <div className="mb-3">
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-1 justify-items-center max-w-3xl mx-auto">
                 {extractedCards.map((card, index) => (
