@@ -1,4 +1,5 @@
 import { ethers } from "ethers"
+import elementByCard from "../assets/bead151-elements.json"; 
 
 /**
  * Combines multiple SVG files into a single SVG for card generation
@@ -53,24 +54,35 @@ export async function generateCardSvgDataUri(type: number, frameId: number, card
     return `data:image/svg+xml,${encodedSvg}`;
 }
 
+
+type ElementName =
+  | "Grass" | "Water" | "Fire" | "Bug" | "Flying" | "Normal" | "Poison"
+  | "Electric" | "Ground" | "Fairy" | "Fighting" | "Rock" | "Psychic"
+  | "Ice" | "Ghost" | "Dragon";
+
+export function getElementNameForCard(cardId: number): ElementName {
+  const key = String(cardId) as keyof typeof elementByCard; // <- cast the key
+  return (elementByCard[key] as ElementName) ?? "Normal";
+}
+
 /**
  * Generates a bead SVG data URI directly from a card index (1-151)
- * @param cardIndex - Card index (1-151)
+ * @param cardId - Card index (1-151)
  * @returns Data URI string for the bead SVG
  */
-export async function generateBeadSvgFromIndex(cardIndex: number): Promise<string> {
+export async function generateBeadSvgFromIndex(cardId: number): Promise<string> {
     try {
         // Validate index range
-        if (cardIndex < 1 || cardIndex > 151) {
-            throw new Error(`Invalid card index: ${cardIndex}. Must be between 1-151`);
+        if (cardId < 1 || cardId > 151) {
+            throw new Error(`Invalid card index: ${cardId}. Must be between 1-151`);
         }
 
         // Fetch the complete bead SVG file
-        const paddedNumber = cardIndex.toString().padStart(3, '0');
+        const paddedNumber = cardId.toString().padStart(3, '0');
       //  const response = await fetch(`/images/svgs/beads151/${paddedNumber}.svg`);
         const response = await fetch(`/images/svgs/beads151/001.svg`);
         
-        if (!response.ok) throw new Error(`Failed to fetch bead SVG: ${cardIndex}`);
+        if (!response.ok) throw new Error(`Failed to fetch bead SVG: ${cardId}`);
         const svgContent = await response.text();
 
         // Remove transparent space by creating a cropped version
@@ -81,7 +93,7 @@ export async function generateBeadSvgFromIndex(cardIndex: number): Promise<strin
         return `data:image/svg+xml;base64,${base64}`;
     } catch (error) {
         console.error('Error generating bead SVG from index:', error);
-        throw new Error(`Failed to generate bead SVG from index: ${cardIndex}`);
+        throw new Error(`Failed to generate bead SVG from index: ${cardId}`);
     }
 }
 
@@ -173,6 +185,30 @@ export async function generateFakeCardMetadataFromCardId(
     return JSON.stringify(cardMetadata);
 
 }
+
+export async function generateFakeCardMetadataFromCardIdWithElement(
+  cardId: number
+): Promise<string> {
+  const elementName = getElementNameForCard(cardId);
+
+  const cardMetadata = {
+    name: `Bead151 #${cardId.toString().padStart(3, "0")}`,
+    description: "A unique Bead151 character",
+    image: "",
+    attributes: [
+      { trait_type: "Pokemon ID", value: cardId },
+      { trait_type: "Card", value: `Card #${cardId}` },
+      { trait_type: "Frame", value: "Normal" },
+      { trait_type: "Element", value: elementName },
+      { trait_type: "Attack", value: 0 },
+      { trait_type: "HP", value: 0 },
+      { trait_type: "Defense", value: 0 }
+    ]
+  };
+
+  return JSON.stringify(cardMetadata);
+}
+
 
 /**
  * Generates metadata for the next evolution card
