@@ -1,9 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
+
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react"
 import { ethers } from "ethers"
 import { Loader2, Eye, EyeOff, RotateCcw } from "lucide-react"
+import { Sword, Shield, Heart, Zap, Hash, Sparkles } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
 import Card from "./Card"
@@ -21,12 +24,16 @@ interface DexEntry {
 }
 
 export default function Dex() {
+    const [showMetadataModal, setShowMetadataModal] = useState(false)
+    const [metadataModalData, setMetadataModalData] = useState<CardData | null>(null)
     const { address, isConnected } = useAppKitAccount()
     const { walletProvider } = useAppKitProvider("eip155")
     const [selectedCardData, setSelectedCardData] = useState<CardData | null>(null)
     const [dexEntries, setDexEntries] = useState<DexEntry[]>([])
     const [ownedCards, setOwnedCards] = useState<Set<number>>(new Set())
-    const [ownedCardsWithMetadata, setOwnedCardsWithMetadata] = useState<Map<number, CardData>>(new Map())
+    const [ownedCardsWithMetadata, setOwnedCardsWithMetadata] = useState<Map<number, CardData[]>>(new Map())
+    const [selectedCardIndex, setSelectedCardIndex] = useState<number>(0) // Track which card in the array we're viewing
+
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [hideNotOwned, setHideNotOwned] = useState<boolean>(false)
     const [selectedCard, setSelectedCard] = useState<DexEntry | null>(null)
@@ -39,10 +46,10 @@ export default function Dex() {
         localStorage.removeItem('bead151-dex-cache')
         localStorage.removeItem('bead151-dex-cache-version')
         console.log('DEX cache cleared. Regenerating...')
-        
+
         // Reinitialize the DEX
         await initializeDex()
-        
+
         // If user is connected, also refresh their collection
         if (isConnected && address) {
             await fetchUserCollection()
@@ -58,7 +65,7 @@ export default function Dex() {
 
     // Make clearDexCache available globally for debugging
     useEffect(() => {
-        ;(window as any).clearDexCache = clearDexCache
+        ; (window as any).clearDexCache = clearDexCache
         return () => {
             delete (window as any).clearDexCache
         }
@@ -84,12 +91,12 @@ export default function Dex() {
     const initializeDex = async () => {
         setIsDexLoading(true)
         setLoadingProgress(0)
-        
+
         // Check if we have cached DEX data
         const cachedDexData = localStorage.getItem('bead151-dex-cache')
         const cacheVersion = localStorage.getItem('bead151-dex-cache-version')
         const currentVersion = '1.0' // Increment this when SVG generation logic changes
-        
+
         if (cachedDexData && cacheVersion === currentVersion) {
             try {
                 const cachedEntries = JSON.parse(cachedDexData)
@@ -102,11 +109,11 @@ export default function Dex() {
                 console.warn('Failed to parse cached DEX data, regenerating...', error)
             }
         }
-        
+
         console.log('Generating fresh DEX data...')
         const entries: DexEntry[] = []
         const totalCards = 151
-        
+
         for (let i = 1; i <= totalCards; i++) {
             try {
                 // Generate SVG from index using the new function
@@ -125,19 +132,19 @@ export default function Dex() {
                     owned: false
                 })
             }
-            
+
             // Update progress
             const progress = Math.round((i / totalCards) * 100)
             setLoadingProgress(progress)
-            
+
             // Add a small delay to make the progress visible and avoid blocking the UI
             if (i % 10 === 0) {
                 await new Promise(resolve => setTimeout(resolve, 50))
             }
         }
-        
+
         setDexEntries(entries)
-        
+
         // Cache the generated entries for future use
         try {
             localStorage.setItem('bead151-dex-cache', JSON.stringify(entries))
@@ -146,7 +153,7 @@ export default function Dex() {
         } catch (error) {
             console.warn('Failed to cache DEX data:', error)
         }
-        
+
         setIsDexLoading(false)
     }
 
@@ -161,10 +168,13 @@ export default function Dex() {
             console.log("Owned card IDs:", ownedCardIds);
             setOwnedCards(ownedCardIds)
 
-            // Populate ownedCardsWithMetadata Map
-            const cardMetadataMap = new Map<number, CardData>()
+            // Populate ownedCardsWithMetadata Map with arrays of cards
+            const cardMetadataMap = new Map<number, CardData[]>()
             cards.forEach(card => {
-                cardMetadataMap.set(card.cardId, card)
+                if (!cardMetadataMap.has(card.cardId)) {
+                    cardMetadataMap.set(card.cardId, [])
+                }
+                cardMetadataMap.get(card.cardId)!.push(card)
             })
             setOwnedCardsWithMetadata(cardMetadataMap)
 
@@ -173,7 +183,6 @@ export default function Dex() {
                 console.log("Previous entries length:", prevEntries.length)
                 return prevEntries.map(entry => {
                     const isOwned = ownedCardIds.has(entry.cardId)
-                  //  console.log(`Card ${entry.cardId}: owned = ${isOwned}`)
                     let cardName = `Card #${entry.cardId}`
 
                     return {
@@ -199,13 +208,15 @@ export default function Dex() {
 
     const handleCardClick = async (entry: DexEntry) => {
         setSelectedCard(entry)
+        setSelectedCardIndex(0) // Reset to first card when opening modal
 
         // Load the full card data for the Card component
         let cardData: CardData
-        
+
         if (entry.owned && ownedCardsWithMetadata.has(entry.cardId)) {
-            // Use real metadata for owned cards
-            cardData = ownedCardsWithMetadata.get(entry.cardId)!
+            // Use real metadata for owned cards - get first card in array
+            const cardsArray = ownedCardsWithMetadata.get(entry.cardId)!
+            cardData = cardsArray[0] // Start with first card
         } else {
             // Generate fake metadata for unowned cards
             const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
@@ -214,17 +225,35 @@ export default function Dex() {
                 characterStatsContractABI,
                 ethersProvider
             )
-            
+
             const fakeMetadata = await generateFakeCardMetadataFromCardId(entry.cardId, characterStatsContract)
-          
+
             cardData = {
                 tokenId: 0, // Not applicable for fake cards
                 cardId: entry.cardId,
                 metadata: fakeMetadata // Already a JSON string, don't stringify again
             }
         }
-        
+
         setSelectedCardData(cardData)
+    }
+
+    const navigateToNextCard = () => {
+        if (!selectedCard || !ownedCardsWithMetadata.has(selectedCard.cardId)) return
+
+        const cardsArray = ownedCardsWithMetadata.get(selectedCard.cardId)!
+        const nextIndex = (selectedCardIndex + 1) % cardsArray.length
+        setSelectedCardIndex(nextIndex)
+        setSelectedCardData(cardsArray[nextIndex])
+    }
+
+    const navigateToPrevCard = () => {
+        if (!selectedCard || !ownedCardsWithMetadata.has(selectedCard.cardId)) return
+
+        const cardsArray = ownedCardsWithMetadata.get(selectedCard.cardId)!
+        const prevIndex = selectedCardIndex === 0 ? cardsArray.length - 1 : selectedCardIndex - 1
+        setSelectedCardIndex(prevIndex)
+        setSelectedCardData(cardsArray[prevIndex])
     }
 
 
@@ -277,7 +306,7 @@ export default function Dex() {
                                 <p className="text-lg text-yellow-300 font-mono mb-2">
                                     PLEASE WAIT...
                                 </p>
-                      
+
                             </div>
                         </div>
                     </div>
@@ -302,7 +331,7 @@ export default function Dex() {
                                     >
                                         <RotateCcw className={`h-4 w-4 ${isDexLoading ? 'animate-spin' : ''}`} />
                                     </Button>
-                                    
+
                                     <div className="text-2xl font-bold text-green-400 mb-2 font-mono">
                                         {ownedCount.toString().padStart(3, '0')}/151 {completionPercentage}%
                                     </div>
@@ -352,55 +381,55 @@ export default function Dex() {
 
                         {/* DEX Grid */}
                         <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-15 gap-2 pb-8">
-                    {filteredEntries.map((entry) => (
-                        <div
-                            key={entry.cardId}
-                            onClick={() => handleCardClick(entry)}
-                            className={`
+                            {filteredEntries.map((entry) => (
+                                <div
+                                    key={entry.cardId}
+                                    onClick={() => handleCardClick(entry)}
+                                    className={`
                                 relative aspect-square rounded border-2 overflow-hidden transition-all duration-300 hover:scale-105 cursor-pointer 
                                 ${entry.owned
-                                    ? 'bg-black border-yellow-300 shadow-lg hover:border-cyan-300'
-                                    : 'bg-gray-600 border-gray-400'
-                                }
+                                            ? 'bg-black border-yellow-300 shadow-lg hover:border-cyan-300'
+                                            : 'bg-gray-600 border-gray-400'
+                                        }
                             `}
-                        >
-                            {/* Card Number */}
-                            <div className="absolute top-1 left-1 z-10">
-                                <span className={`text-xs font-bold px-1 py-0.5 border rounded font-mono ${entry.owned
-                                        ? 'bg-green-400 text-black border-green-400'
-                                        : 'bg-gray-500 text-gray-300 border-gray-500'
-                                    }`}>
-                                    {entry.cardId.toString().padStart(3, '0')}
-                                </span>
-                            </div>
+                                >
+                                    {/* Card Number */}
+                                    <div className="absolute top-1 left-1 z-10">
+                                        <span className={`text-xs font-bold px-1 py-0.5 border rounded font-mono ${entry.owned
+                                            ? 'bg-green-400 text-black border-green-400'
+                                            : 'bg-gray-500 text-gray-300 border-gray-500'
+                                            }`}>
+                                            {entry.cardId.toString().padStart(3, '0')}
+                                        </span>
+                                    </div>
 
-                            {/* Card Image */}
-                            <div className="w-full h-full flex items-center justify-center p-1">
-                                <img
-                                    src={entry.imageUrl}
-                                    alt={entry.cardName || `Card ${entry.cardId}`}
-                                    className={`
+                                    {/* Card Image */}
+                                    <div className="w-full h-full flex items-center justify-center p-1">
+                                        <img
+                                            src={entry.imageUrl}
+                                            alt={entry.cardName || `Card ${entry.cardId}`}
+                                            className={`
                                         max-w-full max-h-full object-contain transition-all duration-300 pixelated
                                         ${entry.owned ? '' : 'grayscale opacity-30'}
                                     `}
-                                    onError={(e) => {
-                                        (e.target as HTMLImageElement).src = '/placeholder.svg'
-                                    }}
-                                />
-                            </div>
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).src = '/placeholder.svg'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
 
-                {/* Empty State */}
-                {hideNotOwned && filteredEntries.length === 0 && (
-                    <div className="text-center py-12">
-                        <div className="bg-black border-4 border-gray-400 rounded-lg p-8 max-w-md mx-auto">
-                            <p className="text-xl text-yellow-300 mb-4 font-mono">NO CARDS OWNED</p>
-                            <p className="text-cyan-300 font-mono text-sm">START COLLECTING TO BUILD YOUR DEX!</p>
-                        </div>
-                    </div>
-                )}
+                        {/* Empty State */}
+                        {hideNotOwned && filteredEntries.length === 0 && (
+                            <div className="text-center py-12">
+                                <div className="bg-black border-4 border-gray-400 rounded-lg p-8 max-w-md mx-auto">
+                                    <p className="text-xl text-yellow-300 mb-4 font-mono">NO CARDS OWNED</p>
+                                    <p className="text-cyan-300 font-mono text-sm">START COLLECTING TO BUILD YOUR DEX!</p>
+                                </div>
+                            </div>
+                        )}
                     </>
                 )}
             </div>
@@ -412,15 +441,67 @@ export default function Dex() {
                     onClick={() => {
                         setSelectedCard(null)
                         setSelectedCardData(null)
+                        setSelectedCardIndex(0)
                     }}
                 >
                     {/* Card Component */}
                     {selectedCardData ? (
-                        <div className="flex flex-col items-center space-y-6" onClick={(e) => e.stopPropagation()}>
-                            <Card 
-                                cardData={selectedCardData} 
+                        <div className="flex flex-col items-center space-y-6" onClick={e => e.stopPropagation()}>
+                            {/* Navigation Header (only show if multiple cards) */}
+                            {selectedCard.owned && ownedCardsWithMetadata.has(selectedCard.cardId) && (
+                                <div className="flex items-center space-x-4 bg-black border-2 border-yellow-300 rounded-lg px-6 py-3">
+
+                                    {ownedCardsWithMetadata.get(selectedCard.cardId)!.length > 1 && (
+                                        <button
+                                            onClick={navigateToPrevCard}
+                                            className="text-yellow-300 hover:text-yellow-400 transition-colors p-2 hover:bg-gray-800 rounded"
+                                            title="Previous card"
+                                        >
+                                            <ChevronLeft className="h-6 w-6" />
+                                        </button>
+                                    )}
+
+
+                                    <div className="text-center">
+                                        <div className="text-yellow-300 font-mono text-lg font-bold">
+                                            Dex Id #{selectedCard.cardId}
+                                        </div>
+                                        <div className="text-cyan-300 font-mono text-sm">
+                                            Token ID: {selectedCardData.tokenId}
+                                        </div>
+                                    </div>
+
+                                    {ownedCardsWithMetadata.get(selectedCard.cardId)!.length > 1 && (
+                                        <button
+                                            onClick={navigateToNextCard}
+                                            className="text-yellow-300 hover:text-yellow-400 transition-colors p-2 hover:bg-gray-800 rounded"
+                                            title="Next card"
+                                        >
+                                            <ChevronRight className="h-6 w-6" />
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            <Card
+                                cardData={selectedCardData}
                                 customClasses="w-48 h-64 sm:w-56 sm:h-72 md:w-64 md:h-80"
                             />
+
+                            {selectedCard.owned && (
+                                <div className="flex flex-col items-center space-y-2">
+                                    <button
+                                        className="cursor-pointer px-4 py-2 bg-yellow-300 text-black font-mono font-bold rounded shadow hover:bg-yellow-400 transition mt-6"
+                                        onClick={() => {
+                                            setMetadataModalData(selectedCardData)
+                                            setShowMetadataModal(true)
+                                        }}
+                                    >
+                                        View metadata
+                                    </button>
+
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="flex flex-col items-center space-y-4">
@@ -431,6 +512,18 @@ export default function Dex() {
                 </div>
             )}
 
+            {/* Metadata Modal */}
+            {showMetadataModal && metadataModalData && (
+                <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4" onClick={() => setShowMetadataModal(false)}>
+                    <div className="bg-gray-900 border-4 border-yellow-300 rounded-lg p-8 max-w-lg w-full max-h-[90vh] relative overflow-y-auto" onClick={e => e.stopPropagation()}>
+                        <button className="absolute top-2 right-2 text-yellow-300 hover:text-yellow-400 font-bold text-2xl" onClick={() => setShowMetadataModal(false)}>&times;</button>
+                        <div className="flex flex-col items-center space-y-6">
+                            <Card cardData={metadataModalData} customClasses="w-45 h-58 sm:w-45 sm:h-58 pb-4" />
+                            <MetadataTable metadata={metadataModalData.metadata} />
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* Custom CSS for responsive grid */}
             <style>{`
                 @media (min-width: 1280px) {
@@ -447,4 +540,84 @@ export default function Dex() {
             `}</style>
         </div>
     )
+
+    // --- Place this at the very end of the file, after the Dex component ---
+    function MetadataTable({ metadata }: { metadata: string }) {
+        let parsed = null;
+        try {
+            if (metadata.startsWith('data:application/json;base64,')) {
+                const base64 = metadata.replace('data:application/json;base64,', '');
+                parsed = JSON.parse(atob(base64));
+            } else if (/^[A-Za-z0-9+/=]+$/.test(metadata)) {
+                // If it's just base64
+                parsed = JSON.parse(atob(metadata));
+            } else {
+                parsed = JSON.parse(metadata);
+            }
+        } catch (e) {
+            return <div className="text-red-400 font-mono">Error parsing metadata</div>;
+        }
+        if (!parsed) return null;
+        console.log(parsed);
+        const tokenId = parsed.name.replace('Beads151 #', '');
+        const attributes = parsed.attributes || [];
+        const getAttr = (trait: string) => attributes.find((a: any) => a.trait_type === trait)?.value || '';
+
+        return (
+            <div className="w-full bg-black border-2 border-gray-600 rounded-lg p-4">
+                <div className="grid grid-cols-1 gap-3">
+                    {/* Token ID */}
+                    <div className="flex items-center justify-between p-2 bg-gray-800 border border-gray-600 rounded">
+                        <div className="flex items-center space-x-2">
+                            <Hash className="h-4 w-4 text-cyan-400" />
+                            <span className="text-cyan-300 font-mono text-sm">Token ID</span>
+                        </div>
+                        <span className="text-yellow-300 font-mono font-bold">{tokenId}</span>
+                    </div>
+
+                    {/* Card ID */}
+                    <div className="flex items-center justify-between p-2 bg-gray-800 border border-gray-600 rounded">
+                        <div className="flex items-center space-x-2">
+                            <Sparkles className="h-4 w-4 text-purple-400" />
+                            <span className="text-cyan-300 font-mono text-sm">Dex ID</span>
+                        </div>
+                        <span className="text-yellow-300 font-mono font-bold">{getAttr('Dex ID') || getAttr('Card') || '-'}</span>
+                    </div>
+
+                    {/* Stats Row */}
+                    <div className="grid grid-cols-3 gap-2">
+                        {/* Attack */}
+                        <div className="flex flex-col items-center p-3 bg-red-900/30 border border-red-500/50 rounded">
+                            <Sword className="h-5 w-5 text-red-400 mb-1" />
+                            <span className="text-red-300 font-mono text-xs">ATK</span>
+                            <span className="text-yellow-300 font-mono font-bold text-lg">{getAttr('Attack')}</span>
+                        </div>
+
+                        {/* HP */}
+                        <div className="flex flex-col items-center p-3 bg-green-900/30 border border-green-500/50 rounded">
+                            <Heart className="h-5 w-5 text-green-400 mb-1" />
+                            <span className="text-green-300 font-mono text-xs">HP</span>
+                            <span className="text-yellow-300 font-mono font-bold text-lg">{getAttr('HP')}</span>
+                        </div>
+
+                        {/* Defense */}
+                        <div className="flex flex-col items-center p-3 bg-blue-900/30 border border-blue-500/50 rounded">
+                            <Shield className="h-5 w-5 text-blue-400 mb-1" />
+                            <span className="text-blue-300 font-mono text-xs">DEF</span>
+                            <span className="text-yellow-300 font-mono font-bold text-lg">{getAttr('Defense')}</span>
+                        </div>
+                    </div>
+
+                    {/* Element Type */}
+                    <div className="flex items-center justify-between p-2 bg-gray-800 border border-gray-600 rounded">
+                        <div className="flex items-center space-x-2">
+                            <Zap className="h-4 w-4 text-yellow-400" />
+                            <span className="text-sm text-cyan-300 font-mono text-sm">Type</span>
+                        </div>
+                        <span className="text-sm text-yellow-300 font-mono font-bold">{getAttr('Element') || '-'}</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 }

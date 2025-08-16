@@ -225,6 +225,17 @@ export default function NavBar({ setCurrentView, currentView }: NavBarProps) {
                         MINT
                     </button>
                     <button
+                        onClick={() => handleNavClick("openPack")}
+                        disabled={onlyFrontPage}
+                        className={`block px-3 py-2 border-2 border-transparent rounded text-base font-bold font-mono w-full text-left transition-all duration-200 ${
+                            onlyFrontPage 
+                                ? "text-gray-500 cursor-not-allowed" 
+                                : "text-cyan-300 hover:text-yellow-300 hover:border-gray-400 hover:bg-gray-600"
+                        }`}
+                    >
+                        OPEN PACK
+                    </button>
+                    <button
                         onClick={() => handleNavClick("collection")}
                         disabled={onlyFrontPage}
                         className={`block px-3 py-2 border-2 border-transparent rounded text-base font-bold font-mono w-full text-left transition-all duration-200 ${
@@ -246,17 +257,7 @@ export default function NavBar({ setCurrentView, currentView }: NavBarProps) {
                     >
                         DEX
                     </button>
-                    <button
-                        onClick={() => handleNavClick("openPack")}
-                        disabled={onlyFrontPage}
-                        className={`block px-3 py-2 border-2 border-transparent rounded text-base font-bold font-mono w-full text-left transition-all duration-200 ${
-                            onlyFrontPage 
-                                ? "text-gray-500 cursor-not-allowed" 
-                                : "text-cyan-300 hover:text-yellow-300 hover:border-gray-400 hover:bg-gray-600"
-                        }`}
-                    >
-                        OPEN PACK
-                    </button>
+                    
 
                     <button
                         onClick={() => handleNavClick("eggs")}
