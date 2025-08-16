@@ -236,14 +236,12 @@ export default function MintPage() {
                     <div className="grid md:grid-cols-2 gap-6 items-center">
                         {/* Image */}
                         <div className="text-center">
-                            <div className="bg-gray-600 border-4 border-gray-400 p-3 inline-block">
-                                <div className="bg-black border-2 border-gray-400 p-2">
+                            <div className=" p-3 inline-block">
                                     <img
-                                        src="/images/pack.png?height=300&width=300"
+                                        src="/images/pack.png"
                                         alt="Bead151 Pack"
                                         className="w-full max-w-xs mx-auto pixelated"
                                     />
-                                </div>
                             </div>
                         </div>
 
