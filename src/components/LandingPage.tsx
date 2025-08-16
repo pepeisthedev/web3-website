@@ -184,46 +184,45 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
       {/* Hero + Gallery Section */}
       <section
         id="hero"
-        className={`relative z-20 min-h-screen flex items-center justify-center px-4 pt-20 transition-all duration-1000 ${
+        className={`relative z-20 min-h-screen flex items-center justify-center px-4 pt-16 sm:pt-20 transition-all duration-1000 ${
           isVisible.hero ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
         }`}
       >
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-7xl font-bold text-yellow-300 mb-6 leading-tight font-mono tracking-wider">
+        <div className="max-w-4xl mx-auto text-center w-full">
+          {/* Main Title - Responsive sizing */}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-yellow-300 mb-4 sm:mb-6 leading-tight font-mono tracking-wider">
             BEADS 151
           </h1>
 
-          {/* Gallery */}
+          {/* Gallery - Mobile optimized */}
           <section
             id="gallery"
-            className={`relative z-20 mb-8 transition-all duration-1000 delay-300 ${
+            className={`relative z-20 mb-6 sm:mb-8 transition-all duration-1000 delay-300 ${
               isVisible.gallery ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
             }`}
           >
-            <div className="relative overflow-hidden bg-black border-4 border-yellow-300 p-4 mb-4">
+            <div className="relative overflow-hidden bg-black border-2 sm:border-4 border-yellow-300 p-2 sm:p-4 mb-3 sm:mb-4">
               {isLoadingGallery ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="text-cyan-300 text-sm font-mono">Loading cards…</div>
+                <div className="flex items-center justify-center py-6 sm:py-8">
+                  <div className="text-cyan-300 text-xs sm:text-sm font-mono">Loading cards…</div>
                 </div>
               ) : randomCards.length === 0 ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="text-yellow-300 text-sm font-mono">No preview cards</div>
+                <div className="flex items-center justify-center py-6 sm:py-8">
+                  <div className="text-yellow-300 text-xs sm:text-sm font-mono">No preview cards</div>
                 </div>
               ) : (
                 <div className="flex animate-scroll-left">
                   {[...randomCards, ...randomCards, ...randomCards].map((cardData, index) => (
-                    <div key={`gallery-card-${index}`} className="flex-shrink-0 mx-2">
+                    <div key={`gallery-card-${index}`} className="flex-shrink-0 mx-1 sm:mx-2">
                       <div className="relative group">
-                     
-                          <Card
-                            cardData={cardData}
-                            showBackDefault={false}
-                            disableFlip={false}
-                            forceShowFront={false}
-                            scaleIfHover={false}
-                            customClasses="w-35 h-38 sm:w-45 sm:h-58"
-                          />
-                   
+                        <Card
+                          cardData={cardData}
+                          showBackDefault={false}
+                          disableFlip={false}
+                          forceShowFront={false}
+                          scaleIfHover={false}
+                          customClasses="w-20 h-28 sm:w-28 sm:h-36 md:w-35 md:h-38 lg:w-45 lg:h-58"
+                        />
                       </div>
                     </div>
                   ))}
@@ -234,42 +233,44 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
             <div className="flex justify-center">
               <Button
                 size="sm"
-                className="bg-cyan-700 hover:bg-cyan-600 border-2 border-cyan-400 text-white font-mono"
+                className="bg-cyan-700 hover:bg-cyan-600 border border-cyan-400 sm:border-2 text-white font-mono text-xs sm:text-sm px-3 sm:px-4 py-2"
                 onClick={loadRandomCards}
                 disabled={isLoadingGallery}
               >
-                <RefreshCcw className="h-4 w-4 mr-2" />
+                <RefreshCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Shuffle
               </Button>
             </div>
           </section>
 
+          {/* Mint Button - Mobile optimized */}
           {!onlyFrontPage && (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex justify-center mb-6 sm:mb-8">
               <Button
                 size="lg"
-                className="bg-red-600 hover:bg-red-700 border-4 border-red-400 text-white px-8 py-4 text-lg mb-8 mt-8 font-mono font-bold"
+                className="bg-red-600 hover:bg-red-700 border-2 sm:border-4 border-red-400 text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-mono font-bold"
                 onClick={() => setCurrentView("mint")}
               >
-                MINT <ArrowRight className="ml-2 h-5 w-5" />
+                MINT <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </div>
           )}
 
-          <div className="bg-teal-800 border-4 border-yellow-300 p-6 mb-8">
-            <div className="max-w-2xl mx-auto font-mono space-y-4">
-              <p className="text-lg text-cyan-300 leading-relaxed">
+          {/* Description Box - Mobile optimized */}
+          <div className="bg-teal-800 border-2 sm:border-4 border-yellow-300 p-4 sm:p-6 mb-6 sm:mb-8">
+            <div className="max-w-2xl mx-auto font-mono space-y-3 sm:space-y-4">
+              <p className="text-base sm:text-lg text-cyan-300 leading-relaxed">
                 BEAD151 IS A DYNAMIC ON-CHAIN NFT EXPERIENCE.
               </p>
-              <p className="text-base text-cyan-300 leading-relaxed">
+              <p className="text-sm sm:text-base text-cyan-300 leading-relaxed">
                 MINT UNIQUE COLLECTIBLE CARDS, EACH WITH THEIR OWN RARITY AND TRAITS. BURN YOUR NFTS
                 TO EARN CANDY, EVOLVE YOUR COLLECTION, AND UNLOCK RARE COMBINATIONS.
               </p>
-              <p className="text-base text-green-400 leading-relaxed">
+              <p className="text-sm sm:text-base text-green-400 leading-relaxed">
                 ALL THE ART, AND EVERY ACTION — FROM MINTING TO EVOLVING — IS POWERED BY OVER 600
                 VERIFIED SMART CONTRACTS.
               </p>
-              <p className="text-base text-yellow-300 font-bold leading-relaxed">
+              <p className="text-sm sm:text-base text-yellow-300 font-bold leading-relaxed">
                 NO OFF-CHAIN HACKS, JUST PURE ON-CHAIN PLAY.
               </p>
             </div>
@@ -277,49 +278,50 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features Section - Mobile optimized */}
       <section
         id="features"
-        className={`relative pt-10 md:pt-0 z-20 mb-8 px-4 transition-all duration-1000 delay-500 ${
+        className={`relative pt-6 sm:pt-10 md:pt-0 z-20 mb-6 sm:mb-8 px-4 transition-all duration-1000 delay-500 ${
           isVisible.features ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
         }`}
       >
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-yellow-300 mb-6 font-mono tracking-wider">
+          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-yellow-300 mb-4 sm:mb-6 font-mono tracking-wider">
               ABOUT THE PROJECT
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          {/* Mobile-first grid - stacks on small screens, 3 columns on medium+ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {[
               {
-                icon: <Zap className="h-8 w-8" />,
+                icon: <Zap className="h-6 w-6 sm:h-8 sm:w-8" />,
                 title: "ON-CHAIN",
                 description:
                   "EVERYTHING IS ON-CHAIN, ALL THE ART AND ALL THE ACTIONS. WE USE OVER 600 SMART CONTRACTS TO MAKE THIS POSSIBLE",
               },
               {
-                icon: <Brush className="h-8 w-8" />,
+                icon: <Brush className="h-6 w-6 sm:h-8 sm:w-8" />,
                 title: "HAND MADE ART",
                 description:
                   "ALL 151 CARDS ARE HAND DRAWN AND PIXELATED BY OUR ARTIST, NO USE OF AI",
               },
               {
-                icon: <Star className="h-8 w-8" />,
+                icon: <Star className="h-6 w-6 sm:h-8 sm:w-8" />,
                 title: "AWESOME EXPERIENCE",
                 description: "JOIN US IN AN UNIQUE EXPERIENCE, ONLY ON BASE",
               },
             ].map((feature, index) => (
               <div
                 key={index}
-                className="group p-6 bg-teal-800 border-4 border-yellow-300 hover:border-green-400 transition-all duration-300 hover:scale-105"
+                className="group p-4 sm:p-6 bg-teal-800 border-2 sm:border-4 border-yellow-300 hover:border-green-400 transition-all duration-300 hover:scale-105"
               >
-                <div className="text-green-400 mb-4 group-hover:text-cyan-300 transition-colors">
+                <div className="text-green-400 mb-3 sm:mb-4 group-hover:text-cyan-300 transition-colors">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-bold text-yellow-300 mb-3 font-mono">{feature.title}</h3>
-                <p className="text-cyan-300 leading-relaxed font-mono text-sm">{feature.description}</p>
+                <h3 className="text-lg sm:text-xl font-bold text-yellow-300 mb-2 sm:mb-3 font-mono">{feature.title}</h3>
+                <p className="text-cyan-300 leading-relaxed font-mono text-xs sm:text-sm">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -339,6 +341,14 @@ export default function LandingPage({ setCurrentView }: LandingPageProps) {
         }
         .animate-scroll-left {
           animation: scroll-left 30s linear infinite;
+        }
+
+        /* Ensure proper mobile viewport handling */
+        @media (max-width: 640px) {
+          .min-h-screen {
+            min-height: 100vh;
+            min-height: 100dvh; /* Use dynamic viewport height on mobile */
+          }
         }
       `}</style>
     </div>
