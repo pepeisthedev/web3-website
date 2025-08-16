@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react"
 import { ethers } from "ethers"
-import { Loader2, Eye, EyeOff } from "lucide-react"
+import { Loader2, Eye, EyeOff, RotateCcw } from "lucide-react"
 import { Button } from "./ui/button"
 import { Checkbox } from "./ui/checkbox"
 import Card from "./Card"
@@ -32,7 +32,22 @@ export default function Dex() {
     const [selectedCard, setSelectedCard] = useState<DexEntry | null>(null)
     const [isDexLoading, setIsDexLoading] = useState<boolean>(true)
     const [loadingProgress, setLoadingProgress] = useState<number>(0)
-    const [isGeneratingCardData, setIsGeneratingCardData] = useState<boolean>(false)
+
+    // Function to clear DEX cache and reload
+    const refreshDexCache = async () => {
+        // Clear localStorage
+        localStorage.removeItem('bead151-dex-cache')
+        localStorage.removeItem('bead151-dex-cache-version')
+        console.log('DEX cache cleared. Regenerating...')
+        
+        // Reinitialize the DEX
+        await initializeDex()
+        
+        // If user is connected, also refresh their collection
+        if (isConnected && address) {
+            await fetchUserCollection()
+        }
+    }
 
     // Function to clear DEX cache (useful for debugging)
     const clearDexCache = () => {
@@ -277,7 +292,17 @@ export default function Dex() {
                             <p className="text-xl text-cyan-300 font-mono">COMPLETE CARD DATABASE</p>
 
                             {isConnected && (
-                                <div className="mt-6 bg-black border-4 border-yellow-300 rounded-lg p-4 max-w-md mx-auto">
+                                <div className="mt-6 bg-black border-4 border-yellow-300 rounded-lg p-4 max-w-md mx-auto relative">
+                                    {/* Refresh Button */}
+                                    <Button
+                                        onClick={refreshDexCache}
+                                        disabled={isDexLoading}
+                                        className="absolute -top-4 -right-4 w-16 h-16 p-0 hover:scale-145 text-yellow-300  rounded-full transition-colors duration-200"
+                                        title="Refresh DEX Cache"
+                                    >
+                                        <RotateCcw className={`h-4 w-4 ${isDexLoading ? 'animate-spin' : ''}`} />
+                                    </Button>
+                                    
                                     <div className="text-2xl font-bold text-green-400 mb-2 font-mono">
                                         {ownedCount.toString().padStart(3, '0')}/151 {completionPercentage}%
                                     </div>

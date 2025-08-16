@@ -894,9 +894,9 @@ export default function CollectionPage() {
 
                 {/* Filter Side Menu */}
                 {showFilterMenu && (
-                <div className="fixed inset-0 z-50 flex justify-end bg-black/50 lg:bg-transparent lg:pointer-events-none">
-    <div className="pointer-events-auto bg-teal-800 border-l-4 border-yellow-300 w-80 h-full overflow-y-auto">
-        <div className="p-6">
+                    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 lg:bg-transparent lg:pointer-events-none">
+                        <div className="pointer-events-auto bg-teal-800 border-l-4 border-yellow-300 w-80 h-full overflow-y-auto">
+                            <div className="p-6">
                                 {/* Header */}
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-xl font-bold text-yellow-300 font-mono">
@@ -933,8 +933,8 @@ export default function CollectionPage() {
                                                     <label
                                                         htmlFor={`sidebar-frame-${frame.toLowerCase()}`}
                                                         className={`text-sm cursor-pointer font-mono ${frame === 'Normal' ? 'text-gray-300' :
-                                                                frame === 'Gold' ? 'text-yellow-400' :
-                                                                    'text-purple-400'
+                                                            frame === 'Gold' ? 'text-yellow-400' :
+                                                                'text-purple-400'
                                                             }`}
                                                     >
                                                         {frame.toUpperCase()}
@@ -1109,8 +1109,8 @@ export default function CollectionPage() {
                                         onClick={handleEvolveCard}
                                         disabled={!selectedCard || !canEvolve(selectedCard.cardId)}
                                         className={`flex-1 border-4 font-mono font-bold py-2 sm:py-3 text-sm sm:text-base ${selectedCard && canEvolve(selectedCard.cardId)
-                                                ? 'bg-purple-600 hover:bg-purple-700 border-purple-400 text-white'
-                                                : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
+                                            ? 'bg-purple-600 hover:bg-purple-700 border-purple-400 text-white'
+                                            : 'bg-gray-600 border-gray-400 text-gray-300 cursor-not-allowed'
                                             }`}
                                     >
                                         {selectedCard ? getEvolveButtonText(selectedCard.cardId) : 'CANNOT EVOLVE'}
