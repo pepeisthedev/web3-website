@@ -34,6 +34,21 @@ export default function Dex() {
     const [loadingProgress, setLoadingProgress] = useState<number>(0)
     const [isGeneratingCardData, setIsGeneratingCardData] = useState<boolean>(false)
 
+    // Function to clear DEX cache (useful for debugging)
+    const clearDexCache = () => {
+        localStorage.removeItem('bead151-dex-cache')
+        localStorage.removeItem('bead151-dex-cache-version')
+        console.log('DEX cache cleared. Refresh the page to regenerate.')
+    }
+
+    // Make clearDexCache available globally for debugging
+    useEffect(() => {
+        ;(window as any).clearDexCache = clearDexCache
+        return () => {
+            delete (window as any).clearDexCache
+        }
+    }, [])
+
     // Initialize DEX with all 151 cards
     useEffect(() => {
         const loadDex = async () => {
@@ -55,6 +70,25 @@ export default function Dex() {
         setIsDexLoading(true)
         setLoadingProgress(0)
         
+        // Check if we have cached DEX data
+        const cachedDexData = localStorage.getItem('bead151-dex-cache')
+        const cacheVersion = localStorage.getItem('bead151-dex-cache-version')
+        const currentVersion = '1.0' // Increment this when SVG generation logic changes
+        
+        if (cachedDexData && cacheVersion === currentVersion) {
+            try {
+                const cachedEntries = JSON.parse(cachedDexData)
+                console.log('Loading DEX from cache...')
+                setDexEntries(cachedEntries)
+                setLoadingProgress(100)
+                setIsDexLoading(false)
+                return
+            } catch (error) {
+                console.warn('Failed to parse cached DEX data, regenerating...', error)
+            }
+        }
+        
+        console.log('Generating fresh DEX data...')
         const entries: DexEntry[] = []
         const totalCards = 151
         
@@ -88,6 +122,16 @@ export default function Dex() {
         }
         
         setDexEntries(entries)
+        
+        // Cache the generated entries for future use
+        try {
+            localStorage.setItem('bead151-dex-cache', JSON.stringify(entries))
+            localStorage.setItem('bead151-dex-cache-version', '1.0')
+            console.log('DEX data cached successfully')
+        } catch (error) {
+            console.warn('Failed to cache DEX data:', error)
+        }
+        
         setIsDexLoading(false)
     }
 
@@ -114,7 +158,7 @@ export default function Dex() {
                 console.log("Previous entries length:", prevEntries.length)
                 return prevEntries.map(entry => {
                     const isOwned = ownedCardIds.has(entry.cardId)
-                    console.log(`Card ${entry.cardId}: owned = ${isOwned}`)
+                  //  console.log(`Card ${entry.cardId}: owned = ${isOwned}`)
                     let cardName = `Card #${entry.cardId}`
 
                     return {

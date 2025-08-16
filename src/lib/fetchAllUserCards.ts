@@ -31,10 +31,14 @@ export async function fetchAllUserCards(
       return []
     }
 
+   // console.log("Owned token IDs: ", tokenIds)
+   // console.log("Owned card IDs: ", cardIds)
+
     const cardIdsArray = Array.from(cardIds).map((id: any) => Number(id))
     const tokenIdsArray = Array.from(tokenIds).map((id: any) => Number(id))
 
     const metadataArray = await cardContract.metadata(tokenIdsArray)
+   // console.log("📋 Metadata fetched for token IDs:", tokenIdsArray)
 
     // Helper to decode base64 data:application/json;base64,...
     function decodeBase64Json(dataUri: string): string {

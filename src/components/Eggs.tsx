@@ -4,21 +4,19 @@ import { useState, useEffect, useRef } from "react"
 import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react"
 import { ethers } from "ethers"
 import { Button } from "./ui/button"
-import { Loader2, Timer, Sparkles } from "lucide-react"
+import { Loader2} from "lucide-react"
 import Card from "./Card"
 
 // Contract addresses and ABIs
 import eggContractABI from "../assets/abi/Bead151Egg.json"
 import cardContractABI from "../assets/abi/Bead151Card.json"
-import cardArtSvgRouterContractABI from "../assets/abi/Bead151ArtRouter.json"
 
 const eggContractAddress = import.meta.env.VITE_BEAD151_EGG_CONTRACT
 const cardContractAddress = import.meta.env.VITE_BEAD151_CARD_CONTRACT
-const svgContractAddress = import.meta.env.VITE_BEAD151_CARD_ART_CONTRACT
 
+// For hatched cards, Card component expects { metadata: string }
 interface CardData {
-    svg: string
-    description: string
+    metadata: string
 }
 
 interface EggData {
@@ -120,23 +118,6 @@ export default function Eggs() {
         }, 1000)
     }
 
-    const fetchCardData = async (cardId: number): Promise<CardData | null> => {
-        if (!walletProvider) return null
-
-        const ethersProvider = new ethers.BrowserProvider(walletProvider as ethers.Eip1193Provider)
-        const svgContract = new ethers.Contract(svgContractAddress, cardArtSvgRouterContractABI, ethersProvider)
-        
-        try {
-            const [svg, meta] = await Promise.all([
-                svgContract.render(cardId),
-                svgContract.meta(cardId)
-            ])
-            return { svg, description: meta }
-        } catch (error) {
-            console.error(`Error fetching card ${cardId}:`, error)
-            return null
-        }
-    }
 
     const fetchUserEggs = async () => {
         if (!address || !walletProvider) return
@@ -279,26 +260,32 @@ export default function Eggs() {
             const tx = await eggContract.hatch(hatchableEgg.tokenId)
             const receipt = await tx.wait()
 
-            // Parse events to get the hatched card ID
-            let hatchedCardId: number | null = null
+            // Parse events to get the new tokenId from EggHatched event
+            let newTokenId: number | null = null
             receipt.logs.forEach((log: any) => {
                 try {
                     const parsedLog = cardContract.interface.parseLog(log)
                     if (parsedLog?.name === "EggHatched") {
-                        hatchedCardId = Number(parsedLog.args[2]) // cardId is the 3rd argument
-                        console.log("Hatched card ID:", hatchedCardId)
+                        newTokenId = Number(parsedLog.args[1]) // tokenId is the 2nd argument
+                        console.log("Hatched token ID:", newTokenId)
                     }
                 } catch (e) {
                     console.log("Unparsed log:", log)
                 }
             })
 
-            // Fetch card data if we got a card ID
-            if (hatchedCardId !== null) {
-                const cardData = await fetchCardData(hatchedCardId)
-                if (cardData) {
-                    setHatchedCard(cardData)
-                    setShowHatchedCardModal(true)
+            // Fetch card metadata if we got a tokenId
+            if (newTokenId !== null) {
+                // cardContract.metadata expects an array of tokenIds
+                const metadataArr = await cardContract.metadata([newTokenId])
+                const metadata = metadataArr && metadataArr[0] ? metadataArr[0] : null
+              if (metadata) {
+                let cleanMetadata = metadata;
+                if (metadata.startsWith("data:application/json;base64,")) {
+                    cleanMetadata = metadata.replace("data:application/json;base64,", "");
+                }
+                setHatchedCard({ metadata: cleanMetadata });
+                setShowHatchedCardModal(true);
                 }
             }
 

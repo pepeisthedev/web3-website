@@ -117,6 +117,7 @@ export default function CollectionPage() {
         Holo: true
     })
     const [elementFilters, setElementFilters] = useState<{
+        Normal: boolean,
         Fire: boolean,
         Water: boolean,
         Electric: boolean,
@@ -133,6 +134,7 @@ export default function CollectionPage() {
         Dragon: boolean,
         Fairy: boolean
     }>({
+        Normal: true,
         Fire: true,
         Water: true,
         Electric: true,
@@ -181,6 +183,7 @@ export default function CollectionPage() {
             Holo: true
         })
         setElementFilters({
+            Normal: true,
             Fire: true,
             Water: true,
             Electric: true,
@@ -418,6 +421,7 @@ export default function CollectionPage() {
                 address,
                 walletProvider
             )
+            console.log("Fetched cards:", cards)
             setAllCards(cards)
             processCollectionCards(cards)
         } catch (error) {
@@ -948,7 +952,7 @@ export default function CollectionPage() {
                                     </h4>
                                     <div className="bg-black border-2 border-gray-400 rounded-lg p-4">
                                         <div className="grid grid-cols-2 gap-3">
-                                            {(['Fire', 'Water', 'Electric', 'Grass', 'Ice', 'Fighting', 'Poison', 'Ground', 'Flying', 'Psychic', 'Bug', 'Rock', 'Ghost', 'Dragon', 'Fairy'] as const).map((element) => (
+                                            {(['Fire', 'Water', 'Electric', 'Grass', 'Ice', 'Fighting', 'Poison', 'Ground', 'Flying', 'Psychic', 'Bug', 'Rock', 'Ghost', 'Dragon', 'Fairy', 'Normal'] as const).map((element) => (
                                                 <div key={element} className="flex items-center space-x-2">
                                                     <Checkbox
                                                         id={`sidebar-element-${element.toLowerCase()}`}
