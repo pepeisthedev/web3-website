@@ -894,9 +894,9 @@ export default function CollectionPage() {
 
                 {/* Filter Side Menu */}
                 {showFilterMenu && (
-                    <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
-                        <div className="bg-teal-800 border-l-4 border-yellow-300 w-80 h-full overflow-y-auto">
-                            <div className="p-6">
+                <div className="fixed inset-0 z-50 flex justify-end bg-black/50 lg:bg-transparent lg:pointer-events-none">
+    <div className="pointer-events-auto bg-teal-800 border-l-4 border-yellow-300 w-80 h-full overflow-y-auto">
+        <div className="p-6">
                                 {/* Header */}
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-xl font-bold text-yellow-300 font-mono">
