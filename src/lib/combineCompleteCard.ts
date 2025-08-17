@@ -131,8 +131,8 @@ export async function generateCardSvgFromMetadata(metadata: string): Promise<str
         const frameId = getFrameId(frame);
 
         // Generate the SVG
-       //return await generateCardSvg(typeId, frameId, cardId);
-        return await generateCardSvg(2, 1, 1);
+               //return await generateCardSvg(typeId, frameId, cardId);
+        return await generateCardSvg(1, 1, 1);
     } catch (error) {
         console.error('Error generating card SVG from metadata:', error);
         throw new Error('Failed to generate card SVG from metadata');
